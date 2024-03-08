@@ -1,0 +1,17 @@
+#!/bin/bash
+
+print_usage_if_exists(){
+    if [ -d "$1" ]; then
+        printf "$1: "
+        /usr/bin/df -h "$1" --output='used,pcent,size' | /usr/bin/tail -n 1 | /usr/bin/awk '{print $1" ("$2") of "$3}'
+    fi
+}
+
+# `groups` makes output delimited by spaces, find/replaces spaces for newlines, that's how grep likes it
+my_pi_groups="$(/usr/bin/groups | /usr/bin/tr ' ' '\n' | /usr/bin/grep -e ^pi_)"
+
+print_usage_if_exists ~
+for group in $my_pi_groups; do
+    print_usage_if_exists /work/$group
+    print_usage_if_exists /project/$group
+done
