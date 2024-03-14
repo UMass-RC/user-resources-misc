@@ -2,8 +2,16 @@
 
 print_usage_if_exists(){
     if [ -d "$1" ]; then
-        printf "$1: "
-        /usr/bin/df -h "$1" --output='used,pcent,size' | /usr/bin/tail -n 1 | /usr/bin/awk '{print $1" ("$2") of "$3}'
+        /usr/bin/printf "$1: "
+        df_out=$(/usr/bin/df -h "$1" --output='used,pcent,size' | /usr/bin/tail -n 1)
+        pcent=$(echo "$df_out" | /usr/bin/awk '{print $2}' | /usr/bin/grep -oP '^\d+(?=%$)')
+        if [ "$pcent" -gt "75" ]; then
+            /usr/bin/printf '\033[0;31m' # red
+            echo "$df_out" | /usr/bin/awk '{print $1" ("$2") of "$3}'
+            /usr/bin/printf '\033[0m' # reset
+        else
+            echo "$df_out" | /usr/bin/awk '{print $1" ("$2") of "$3}'
+        fi
     fi
 }
 
