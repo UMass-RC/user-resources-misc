@@ -75,7 +75,6 @@ def fmt_table(table: list[list]) -> list[str]:
     """
     I would use tabulate but I don't want nonstandard imports
     no table headers
-    allows ANSI formatted elements
     """
     output_lines = []
     assert all(len(row) == len(table[0]) for row in table), "all rows must have the same length"
@@ -124,8 +123,8 @@ def loop_print_current_totals(sleep_seconds=1):
 
 def get_total_inodes_used_statvfs(path) -> int | None:
     """
-    when statvfs produces different results for path and dirname(path),
-    total file size in path is known.
+    assumption: when `statvfs` produces different results for `path` and `dirname(path)`,
+    the results for `path` are accurate.
     """
     cwd_statvfs = os.statvfs(path)
     parent_statvfs = os.statvfs(os.path.dirname(path))
