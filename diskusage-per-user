@@ -5,11 +5,12 @@ import os
 import sys
 import pwd
 import time
-import signal
-import atexit
+
+# import signal
+# import atexit
 import threading
 import itertools
-from collections import defaultdict
+from functools import lru_cache
 from concurrent.futures import ThreadPoolExecutor
 
 NUM_THREADS = 1
@@ -19,9 +20,13 @@ uid2bytes_owned = {}
 uid2paths_and_sizes = {}
 total_inodes_counted = 0
 done_counting = threading.Event()
-uid2username = defaultdict(lambda uid: pwd.getpwuid(uid).pw_name)
 total_inodes_used = None
 total_bytes_used = 0
+
+
+@lru_cache(maxsize=None)
+def uid2username(uid: int) -> str:
+    return pwd.getpwuid(uid).pw_name
 
 
 def add_file_to_totals(path):
@@ -66,15 +71,46 @@ def human_readable_size(size_in_bytes: int) -> str:
         return f"{current_size:.2f} {current_unit}"
 
 
+def fmt_table(table: list[list]) -> list[str]:
+    """
+    I would use tabulate but I don't want nonstandard imports
+    no table headers
+    allows ANSI formatted elements
+    """
+    output_lines = []
+    assert all(len(row) == len(table[0]) for row in table), "all rows must have the same length"
+    column_widths = [0] * len(table[0])
+    for row in table:
+        for i, element in enumerate(row):
+            if len(str(element)) > column_widths[i]:
+                column_widths[i] = len(str(element))
+    column_widths = [x + 1 for x in column_widths]  # add one space in between
+    for row in table:
+        line = ""
+        for i, value in enumerate(row):
+            padding_size = column_widths[i] - len(value)
+            line += value + " " * padding_size
+        output_lines.append(line)
+    return output_lines
+
+
 def print_current_totals():
     print(f"inodes counted: {human_readable_count(total_inodes_counted)}")
     if total_inodes_used is not None:
         progress_percent = (total_inodes_counted / total_inodes_used) * 100
-        print(f"count progress: {progress_percent:.1f}%")
-    sorted_uid2bytes_owned = {k: v for k, v in sorted(uid2bytes_owned.items(), key=lambda x: x[1])}
+        print(f"inode count progress: {progress_percent:.1f}%")
+    if len(uid2bytes_owned) == 0:
+        return
+    sorted_uid2bytes_owned = {
+        k: v for k, v in sorted(uid2bytes_owned.items(), key=lambda x: x[1], reverse=True)
+    }
+    usage_table = []
     for uid, bytes_owned in sorted_uid2bytes_owned.items():
         pcent = (bytes_owned / total_bytes_used) * 100
-        print(f"{uid2username[uid]} {human_readable_size(bytes_owned)} {pcent:.1f}%")
+        usage_table.append([uid2username(uid), human_readable_size(bytes_owned), f"{pcent:.1f}%"])
+    for line in fmt_table(usage_table):
+        print(line)
+    print()
 
 
 def loop_print_current_totals(sleep_seconds=1):
