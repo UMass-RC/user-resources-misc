@@ -95,10 +95,13 @@ def fmt_table(table: list[list]) -> list[str]:
 
 
 def print_current_totals():
-    print(f"inodes counted: {human_readable_count(total_inodes_counted)}")
-    if total_inodes_used is not None:
+    if total_inodes_used is None:
+        print(f"inodes counted: {human_readable_count(total_inodes_counted)}")
+    else:
         progress_percent = (total_inodes_counted / total_inodes_used) * 100
-        print(f"inode count progress: {progress_percent:.1f}%")
+        print(
+            f"inodes counted: {human_readable_count(total_inodes_counted)} / {total_inodes_used} = {progress_percent:.1f}%"
+        )
     if len(uid2bytes_owned) == 0:
         return
     sorted_uid2bytes_owned = {
