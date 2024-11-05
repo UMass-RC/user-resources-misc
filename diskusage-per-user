@@ -1,0 +1,138 @@
+#!/usr/bin/env python3
+# in theory 99% of the time spent in IO wait so it doesn't matter that python is a slow language?
+# edit: it does matter. this is twice as slow as `du`.
+import os
+import sys
+import pwd
+import time
+import signal
+import atexit
+import threading
+import itertools
+from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
+
+NUM_THREADS = 1
+
+counting_lock = threading.Lock()
+uid2bytes_owned = {}
+uid2paths_and_sizes = {}
+total_inodes_counted = 0
+done_counting = threading.Event()
+uid2username = defaultdict(lambda uid: pwd.getpwuid(uid).pw_name)
+total_inodes_used = None
+total_bytes_used = 0
+
+
+def add_file_to_totals(path):
+    global total_inodes_counted, uid2bytes_owned, uid2paths_and_sizes, total_bytes_used
+    stat = os.stat(path)
+    with counting_lock:
+        uid2bytes_owned[stat.st_uid] = uid2bytes_owned.get(stat.st_uid, 0) + stat.st_size
+        uid2paths_and_sizes.setdefault(stat.st_uid, []).append([path, stat.st_size])
+        total_inodes_counted += 1
+        total_bytes_used += stat.st_size
+
+
+def human_readable_count(count: int) -> str:
+    current_count = count
+    current_unit = ""
+    for new_unit in ["thousand", "million", "billion", "trillion", "quadrillion"]:
+        new_count = current_count / 1000
+        if new_count < 1:
+            break
+        else:
+            current_count = new_count
+            current_unit = new_unit
+    if current_unit == "":
+        return str(current_count)  # no decimals
+    else:
+        return f"{current_count:.2f} {current_unit}"
+
+
+def human_readable_size(size_in_bytes: int) -> str:
+    current_size = size_in_bytes
+    current_unit = "bytes"
+    for new_unit in ["KB", "MB", "GB", "TB", "PB"]:
+        new_size = current_size / 1000
+        if new_size < 1:
+            break
+        else:
+            current_size = new_size
+            current_unit = new_unit
+    if current_unit == "bytes":
+        return f"{current_size} bytes"  # no decimals
+    else:
+        return f"{current_size:.2f} {current_unit}"
+
+
+def print_current_totals():
+    print(f"inodes counted: {human_readable_count(total_inodes_counted)}")
+    if total_inodes_used is not None:
+        progress_percent = (total_inodes_counted / total_inodes_used) * 100
+        print(f"count progress: {progress_percent:.1f}%")
+    sorted_uid2bytes_owned = {k: v for k, v in sorted(uid2bytes_owned.items(), key=lambda x: x[1])}
+    for uid, bytes_owned in sorted_uid2bytes_owned.items():
+        pcent = (bytes_owned / total_bytes_used) * 100
+        print(f"{uid2username[uid]} {human_readable_size(bytes_owned)} {pcent:.1f}%")
+
+
+def loop_print_current_totals(sleep_seconds=1):
+    while not done_counting.is_set():
+        print_current_totals()
+        time.sleep(sleep_seconds)
+
+
+def get_total_inodes_used_statvfs(path) -> int | None:
+    """
+    when statvfs produces different results for path and dirname(path),
+    total file size in path is known.
+    """
+    cwd_statvfs = os.statvfs(path)
+    parent_statvfs = os.statvfs(os.path.dirname(path))
+    if cwd_statvfs == parent_statvfs:
+        return None
+    return cwd_statvfs.f_files - cwd_statvfs.f_ffree
+
+
+# def enable_alternate_screen_mode():
+#     print("\033[?1049h\033[H")
+
+
+# def disable_alternate_screen_mode():
+#     print("\033[?1049l")
+
+
+# def sigint_handler(x, y):
+#     disable_alternate_screen_mode()
+#     sys.exit(1)
+
+
+def main():
+    global total_inodes_used
+    # enable_alternate_screen_mode()
+    # atexit.register(disable_alternate_screen_mode)
+    # signal.signal(signal.SIGINT, sigint_handler)
+    total_inodes_used = get_total_inodes_used_statvfs(os.path.realpath(os.getcwd()))
+    if total_inodes_used == None:
+        print(
+            "this directory does not have a unique statvfs, so inode counting progress cannot be determined.",
+            file=sys.stderr,
+        )
+    print_current_totals_thread = threading.Thread(target=loop_print_current_totals, daemon=True)
+    print_current_totals_thread.start()
+    with ThreadPoolExecutor(max_workers=NUM_THREADS) as executor:
+        walk_gen = os.walk(".")
+        walk_path_gen = itertools.chain.from_iterable(
+            (os.path.join(root, basename) for basename in files + dirs)
+            for root, dirs, files in walk_gen
+        )
+        executor.map(add_file_to_totals, walk_path_gen)
+    print_current_totals()
+    sys.exit(0)
+    # done_counting.set()
+    # print_current_totals_thread.join()
+
+
+if __name__ == "__main__":
+    main()
