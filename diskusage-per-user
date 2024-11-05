@@ -100,7 +100,7 @@ def print_current_totals():
     else:
         progress_percent = (total_inodes_counted / total_inodes_used) * 100
         print(
-            f"inodes counted: {human_readable_count(total_inodes_counted)} / {total_inodes_used} = {progress_percent:.1f}%"
+            f"inodes counted: {total_inodes_counted} / {total_inodes_used} = {progress_percent:.1f}%"
         )
     if len(uid2bytes_owned) == 0:
         return
