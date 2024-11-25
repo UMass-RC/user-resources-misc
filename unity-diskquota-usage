@@ -64,7 +64,8 @@ def print_usage_and_exit():
 
 
 # if timed out, print whatever usage has been collected so far
-signal.signal(signal.SIGTERM, lambda foo, bar: print_usage_and_exit())
+# this was removed since bad NFS requires sigkill
+# signal.signal(signal.SIGTERM, lambda foo, bar: print_usage_and_exit())
 
 dirs_to_check = [os.path.expanduser("~")]  # home directory
 for gid in os.getgroups():
