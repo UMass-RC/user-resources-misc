@@ -116,7 +116,6 @@ class UnityDiskUsagePerUser:
             )
             executor.map(self.add_file_to_totals, walk_path_gen)
         self.print_current_totals()
-        sys.exit(0)
         # self.done_counting.set()
         # print_current_totals_thread.join()
 
