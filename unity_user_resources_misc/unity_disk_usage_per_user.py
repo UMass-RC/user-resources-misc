@@ -13,7 +13,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
 
-from user_resources_misc import fmt_table, human_readable_count, human_readable_size
+from unity_user_resources_misc import fmt_table, human_readable_count, human_readable_size
 
 """
 multithreaded `du` command that displays the total bytes owned by ecah user

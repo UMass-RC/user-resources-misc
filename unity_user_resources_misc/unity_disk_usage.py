@@ -3,7 +3,7 @@ import grp
 import os
 import shutil
 
-from user_resources_misc import fmt_table, human_readable_size, red
+from unity_user_resources_misc import fmt_table, human_readable_size, red
 
 """
 basically a wrapper around `df`
