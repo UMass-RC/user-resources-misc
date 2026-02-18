@@ -126,6 +126,10 @@ class UnityDiskUsagePerUser:
         # print_current_totals_thread.join()
 
 
-if __name__ == "__main__":
+def main():
     x = UnityDiskUsagePerUser()
     x.main()
+
+
+if __name__ == "__main__":
+    main()
