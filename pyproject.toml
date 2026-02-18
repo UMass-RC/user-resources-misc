@@ -1,0 +1,12 @@
+[project]
+name = "unity_user_resources_misc"
+version = "0.1"
+requires-python = ">=3.12"
+
+[project.scripts]
+unity-directories-usage = "unity_user_resources_misc.unity_disk_usage:main"
+unity-diskquota-usage = "unity_user_resources_misc.unity_disk_usage:main"
+diskusage-per-user = "unity_user_resources_misc.unity_disk_usage_per_user:main"
+
+[tool.black]
+line-length = 100

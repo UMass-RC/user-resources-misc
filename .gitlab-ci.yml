@@ -1,0 +1,10 @@
+# `prettier` requires nodejs
+# `pre-commit` requires git
+# alpine linux has a package for `delta` while debian does not
+# I could apk install nodejs but it's faster to just use that as the base image
+pre-commit:
+  image: node:current-alpine
+  stage: test
+  script:
+    - apk add git pre-commit
+    - pre-commit run --all-files --color always --show-diff-on-failure

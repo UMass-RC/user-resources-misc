@@ -1,0 +1,33 @@
+repos:
+  # auto formatters (no work required) #############################################################
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: .*\.patch$
+      - id: end-of-file-fixer
+        exclude: .*\.patch$
+  - repo: https://github.com/rbubley/mirrors-prettier
+    rev: v3.4.2
+    hooks:
+      - id: prettier
+        exclude: ^group_vars/dhcpservers.yml$
+        types: [yaml]
+  - repo: https://github.com/psf/black.git
+    rev: 26.1.0
+    hooks:
+      - id: black
+
+  # linters (work required) ########################################################################
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-yaml
+      - id: check-json
+      - id: check-xml
+      - id: check-added-large-files
+      - id: check-executables-have-shebangs
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.23.1
+    hooks:
+      - id: gitleaks
