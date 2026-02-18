@@ -15,6 +15,12 @@ from functools import lru_cache
 
 from user_resources_misc import fmt_table, human_readable_count, human_readable_size
 
+"""
+multithreaded `du` command that displays the total bytes owned by ecah user
+if possible, uses `statvfs` to determine the total number inodes in the directory,
+and displays a progress bar based on the number of inodes processed at a given time
+"""
+
 NUM_THREADS = 4
 
 
