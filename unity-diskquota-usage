@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-import os, re, sys, grp, shutil, signal
+import grp
+import os
+import re
+import shutil
+import sys
 
 USAGE_PERCENT_RED_THRESHOLD = 75
 
