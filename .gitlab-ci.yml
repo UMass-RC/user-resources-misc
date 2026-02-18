@@ -6,5 +6,5 @@ pre-commit:
   image: node:current-alpine
   stage: test
   script:
-    - apk add pre-commit
+    - apk add git pre-commit
     - pre-commit run --all-files --color always --show-diff-on-failure
