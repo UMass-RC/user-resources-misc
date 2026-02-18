@@ -6,11 +6,8 @@ pre-commit:
   image: node:current-alpine
   stage: test
   script:
-    - apk add delta git git-lfs pre-commit py3-clustershell
-    - git lfs install --local
-    - pre-commit run --all-files --color always || touch .pre-commit-ci-failed
-    - (git diff --color=always | DELTA_PAGER=none delta) || touch .pre-commit-ci-failed
-    - if [ -f .pre-commit-ci-failed ]; then echo 'did you run `pre-commit install`?'; exit 1; fi
+    - apk add pre-commit
+    - pre-commit run --all-files --color always --show-diff-on-failure
 
 todos_fixmes:
   image: alpine
