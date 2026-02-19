@@ -94,10 +94,8 @@ def main():
     if response.status != 200:
         raise HTTPError(url, response.status, message, response.headers, None)
     data = json.loads(message)
-    idlelock_date = date.strptime(data["idlelock_date"], r"%Y/%m/%d")
-    disable_date = date.strptime(data["disable_date"], r"%Y/%m/%d")
-    time_until_idlelock = idlelock_date - date.today()
-    time_until_disable = disable_date - date.today()
+    time_until_idlelock = date.strptime(data["idlelock_date"], r"%Y/%m/%d") - date.today()
+    time_until_disable = date.strptime(data["disable_date"], r"%Y/%m/%d") - date.today()
     if time_until_disable.days <= DISABLE_WARNING_RED_THRESHOLD_DAYS:
         print_disable_warning(time_until_disable, red=True)
     elif time_until_disable.days <= DISABLE_WARNING_THRESHOLD_DAYS:
