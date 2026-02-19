@@ -128,7 +128,3 @@ class UnityDiskUsagePerUser:
 def main():
     x = UnityDiskUsagePerUser()
     x.main()
-
-
-if __name__ == "__main__":
-    main()
