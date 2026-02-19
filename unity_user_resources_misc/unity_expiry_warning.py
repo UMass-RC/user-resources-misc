@@ -84,6 +84,7 @@ def print_disable_warning(time_until_disable, red=False):
 
 
 def main():
+    # normal entrypoint, testable
     ssl_context = ssl.create_default_context()
     ssl_context.check_hostname = False
     ssl_context.verify_mode = ssl.CERT_NONE
@@ -106,7 +107,8 @@ def main():
         print_idlelock_warning(time_until_idlelock)
 
 
-if __name__ == "__main__":
+def main_fail_quietly():
+    # entrypoint for production
     try:
         main()
     except Exception as e:
