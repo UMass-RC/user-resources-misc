@@ -80,8 +80,7 @@ def print_disable_warning(time_until_disable, owned_pi_group_name: str | None, r
                 fmt_red_maybe(fmt_bold("Account Expiration Warning"), red),
                 f"Your account is scheduled to be disabled in {time_until_disable_str}.",
                 "Once disabled, you will no longer be able to access UnityHPC Platform services,",
-                "and your home directory will be permanently deleted."
-                f"To prevent this, simply log in to the {ACCOUNT_PORTAL}.",
+                "and your home directory will be permanently deleted.",
             ]
         )
     )
@@ -89,15 +88,22 @@ def print_disable_warning(time_until_disable, owned_pi_group_name: str | None, r
         print(
             "\n".join(
                 [
-                    f"If your account is disabled, your PI group '{owned_pi_group_name}' will also be disabled,",
+                    f"Your PI group '{owned_pi_group_name}' will also be disabled,",
                     "the group's directories will be deleted,"
                     "and all the group's members will lose access to UnityHPC Platform services"
                     "unless they are a member of some other group.",
                 ]
             )
         )
-    print(f"For more information, see our {POLICY}.")
-    print()
+    print(
+        "\n".join(
+            [
+                f"To prevent this, simply log in to the {ACCOUNT_PORTAL}.",
+                f"For more information, see our {POLICY}.",
+                "",
+            ]
+        )
+    )
 
 
 def print_pi_group_owner_disable_warning(group_data: list[tuple]):
