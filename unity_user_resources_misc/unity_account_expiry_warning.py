@@ -73,11 +73,10 @@ def print_idlelock_warning(time_until_idlelock: timedelta, red=False):
 
 def print_disable_warning(time_until_disable, owned_pi_group_name: str | None, red=False):
     time_until_disable_str = fmt_red_maybe(timedelta2str(time_until_disable), red)
-    owned_group_note_lines = (
-        [f"Your PI group '{owned_pi_group_name}' will also be disabled."]
-        if owned_pi_group_name is not None
-        else []
-    )
+    if owned_pi_group_name is not None:
+        owned_group_note_lines = [f"Your PI group '{owned_pi_group_name}' will also be disabled."]
+    else:
+        owned_group_note_lines = []
     print(
         "\n".join(
             [
