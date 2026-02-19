@@ -52,7 +52,7 @@ def fmt_red_maybe(x: str, enable: bool):
         return x
 
 
-ACCOUNT_PORTAL = fmt_link("https://account.unityhpc.org", "Unity account portal")
+PORTAL = fmt_link("https://account.unityhpc.org", "Unity account portal")
 POLICY = fmt_link("https://unityhpc.org/about/account-expiration/", "account expiration policy")
 
 
@@ -62,9 +62,8 @@ def print_idlelock_warning(time_until_idlelock: timedelta, red=False):
         "\n".join(
             [
                 fmt_red_maybe(fmt_bold("Account Expiration Warning"), red),
-                f"Your account is scheduled to be idlelocked in {time_until_idlelock_str}.",
-                "Once idlelocked, you will no longer be able to access UnityHPC Platform services.",
-                f"To prevent this, simply log in to the {ACCOUNT_PORTAL}.",
+                f"Your account is scheduled to be idle-locked in {time_until_idlelock_str}.",
+                f"To prevent this, simply log in to the {PORTAL}.",
                 f"For more information, see our {POLICY}.",
                 "",
             ]
@@ -74,31 +73,18 @@ def print_idlelock_warning(time_until_idlelock: timedelta, red=False):
 
 def print_disable_warning(time_until_disable, owned_pi_group_name: str | None, red=False):
     time_until_disable_str = fmt_red_maybe(timedelta2str(time_until_disable), red)
+    owned_group_note_lines = (
+        [f"Your PI group '{owned_pi_group_name}' will also be disabled."]
+        if owned_pi_group_name is not None
+        else []
+    )
     print(
         "\n".join(
             [
                 fmt_red_maybe(fmt_bold("Account Expiration Warning"), red),
                 f"Your account is scheduled to be disabled in {time_until_disable_str}.",
-                "Once disabled, you will no longer be able to access UnityHPC Platform services,",
-                "and your home directory will be permanently deleted.",
-            ]
-        )
-    )
-    if owned_pi_group_name is not None:
-        print(
-            "\n".join(
-                [
-                    f"Your PI group '{owned_pi_group_name}' will also be disabled,",
-                    "the group's directories will be deleted,"
-                    "and all the group's members will lose access to UnityHPC Platform services"
-                    "unless they are a member of some other group.",
-                ]
-            )
-        )
-    print(
-        "\n".join(
-            [
-                f"To prevent this, simply log in to the {ACCOUNT_PORTAL}.",
+                *owned_group_note_lines,
+                f"To prevent this, simply log in to the {PORTAL}.",
                 f"For more information, see our {POLICY}.",
                 "",
             ]
@@ -113,31 +99,15 @@ def print_pi_group_owner_disable_warning(group_data: list[tuple]):
     group_data = [(x, y, fmt_red(timedelta2str(z))) for x, y, z in group_data]
     print(fmt_red(fmt_bold("PI Group Owner Expiration Warning")))
     if len(group_data) == 1:
-        group_name, owner_username, remaining = group_data[0]
-        print(
-            "\n".join(
-                [
-                    f"The owner of PI group '{group_name}' is scheduled to be disabled in {remaining}."
-                    f"To prevent this, the group owner '{owner_username}' must simply log in to the {ACCOUNT_PORTAL}."
-                ]
-            )
-        )
+        group_name, owner, remaining = group_data[0]
+        print(f"The owner of PI group '{group_name}' is scheduled to be disabled in {remaining}.")
+        print(f"To prevent this, the group owner '{owner}' must simply log in to the {PORTAL}.")
     else:
         print("The owners of the following PI groups are scheduled to be disabled:")
         table = [["Group Name", "Owner Username", "Time until Disable"]] + group_data
         print("\n".join(fmt_table(table)))
-    print(
-        "\n".join(
-            [
-                "You are encouraged to contact the group owner and remind them to log in.",
-                "If your PI group owner is disabled, your PI group will also be disabled.",
-                "If at any time you are not a member (or owner) of at least one enabled PI group,"
-                "You will lose access to UnityHPC Platform services.",
-                f"For more information, see our {POLICY},",
-                "",
-            ]
-        )
-    )
+        print(f"To prevent this, each group owner must simply log in to the {PORTAL}.")
+    print(f"For more information, see our {POLICY}\n")
 
 
 def get_expiry_data(username: str, timeout_seconds=1) -> dict:
