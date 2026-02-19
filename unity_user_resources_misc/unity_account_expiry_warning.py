@@ -57,12 +57,11 @@ POLICY = fmt_link("https://unityhpc.org/about/account-expiration/", "account exp
 
 
 def print_idlelock_warning(time_until_idlelock: timedelta, red=False):
-    time_until_idlelock_str = fmt_red_maybe(timedelta2str(time_until_idlelock), red)
     print(
         "\n".join(
             [
                 fmt_red_maybe(fmt_bold("Account Expiration Warning"), red),
-                f"Your account is scheduled to be idle-locked in {time_until_idlelock_str}.",
+                f"Your account is scheduled to be idle-locked in {timedelta2str(time_until_idlelock)}.",
                 f"To prevent this, simply log in to the {PORTAL}.",
                 f"For more information, see our {POLICY}.",
                 "",
@@ -72,7 +71,6 @@ def print_idlelock_warning(time_until_idlelock: timedelta, red=False):
 
 
 def print_disable_warning(time_until_disable, owned_pi_group_name: str | None, red=False):
-    time_until_disable_str = fmt_red_maybe(timedelta2str(time_until_disable), red)
     if owned_pi_group_name is not None:
         owned_group_note_lines = [f"Your PI group '{owned_pi_group_name}' will also be disabled."]
     else:
@@ -81,7 +79,7 @@ def print_disable_warning(time_until_disable, owned_pi_group_name: str | None, r
         "\n".join(
             [
                 fmt_red_maybe(fmt_bold("Account Expiration Warning"), red),
-                f"Your account is scheduled to be disabled in {time_until_disable_str}.",
+                f"Your account is scheduled to be disabled in {timedelta2str(time_until_disable)}.",
                 *owned_group_note_lines,
                 f"To prevent this, simply log in to the {PORTAL}.",
                 f"For more information, see our {POLICY}.",
@@ -94,8 +92,7 @@ def print_disable_warning(time_until_disable, owned_pi_group_name: str | None, r
 def print_pi_group_owner_disable_warning(group_data: list[tuple]):
     if len(group_data) == 0:
         return
-    # format all the timedeltas
-    group_data = [(x, y, fmt_red(timedelta2str(z))) for x, y, z in group_data]
+    group_data = [(x, y, timedelta2str(z)) for x, y, z in group_data]
     print(fmt_red(fmt_bold("PI Group Owner Expiration Warning")))
     if len(group_data) == 1:
         group_name, owner, remaining = group_data[0]
