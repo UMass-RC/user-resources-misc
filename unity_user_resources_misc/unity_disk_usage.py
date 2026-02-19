@@ -2,7 +2,7 @@ import grp
 import os
 import shutil
 
-from unity_user_resources_misc import fmt_table, human_readable_size, red
+from unity_user_resources_misc import fmt_red, fmt_table, human_readable_size
 
 """
 basically a wrapper around `df`
@@ -35,11 +35,11 @@ def main():
             usage.append(
                 [
                     dir_path,
-                    red(human_readable_size(used)),
-                    red("/"),
-                    red(human_readable_size(total)),
-                    red("="),
-                    red(f"{(pcent_used):.0f}%"),
+                    fmt_red(human_readable_size(used)),
+                    fmt_red("/"),
+                    fmt_red(human_readable_size(total)),
+                    fmt_red("="),
+                    fmt_red(f"{(pcent_used):.0f}%"),
                 ]
             )
         else:
