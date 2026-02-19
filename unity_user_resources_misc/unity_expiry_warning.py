@@ -7,6 +7,7 @@ import sys
 from datetime import date, timedelta
 from http.client import HTTPResponse
 from urllib import request
+from urllib.error import HTTPError
 
 IDLELOCK_WARNING_THRESHOLD_DAYS = 30
 IDLELOCK_WARNING_RED_THRESHOLD_DAYS = 7
@@ -89,8 +90,10 @@ def main():
     username = pwd.getpwuid(os.getuid())[0]
     url = f"https://web/lan/api/expiry.php?uid={username}"
     response: HTTPResponse = request.urlopen(url, timeout=1, context=ssl_context)
-    assert response.status == 200
-    data = json.loads(response.read())
+    message = response.read().decode()
+    if response.status != 200:
+        raise HTTPError(url, response.status, message, response.headers, None)
+    data = json.loads(message)
     idlelock_date = date.strptime(data["idlelock_date"], r"%Y/%m/%d")
     disable_date = date.strptime(data["disable_date"], r"%Y/%m/%d")
     time_until_idlelock = idlelock_date - date.today()
