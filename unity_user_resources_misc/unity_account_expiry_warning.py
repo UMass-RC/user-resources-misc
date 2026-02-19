@@ -66,12 +66,13 @@ def print_idlelock_warning(time_until_idlelock: timedelta, red=False):
                 "Once idlelocked, you will no longer be able to access UnityHPC Platform services.",
                 f"To prevent this, simply log in to the {ACCOUNT_PORTAL}.",
                 f"For more information, see our {POLICY}.",
+                "",
             ]
         )
     )
 
 
-def print_disable_warning(time_until_disable, red=False):
+def print_disable_warning(time_until_disable, owned_pi_group_name: str | None, red=False):
     time_until_disable_str = fmt_red_maybe(timedelta2str(time_until_disable), red)
     print(
         "\n".join(
@@ -81,10 +82,22 @@ def print_disable_warning(time_until_disable, red=False):
                 "Once disabled, you will no longer be able to access UnityHPC Platform services,",
                 "and your home directory will be permanently deleted."
                 f"To prevent this, simply log in to the {ACCOUNT_PORTAL}.",
-                f"For more information, see our {POLICY}.",
             ]
         )
     )
+    if owned_pi_group_name is not None:
+        print(
+            "\n".join(
+                [
+                    f"If your account is disabled, your PI group '{owned_pi_group_name}' will also be disabled,",
+                    "the group's directories will be deleted,"
+                    "and all the group's members will lose access to UnityHPC Platform services"
+                    "unless they are a member of some other group.",
+                ]
+            )
+        )
+    print(f"For more information, see our {POLICY}.")
+    print()
 
 
 def print_pi_group_owner_disable_warning(group_data: list[tuple]):
@@ -143,24 +156,28 @@ def main():
     data = get_expiry_data(username)
     time_until_idlelock = time_until(data["idlelock_date"])
     time_until_disable = time_until(data["disable_date"])
-    if time_until_disable.days <= DISABLE_WARNING_RED_THRESHOLD_DAYS:
-        print_disable_warning(time_until_disable, red=True)
-    elif time_until_disable.days <= DISABLE_WARNING_THRESHOLD_DAYS:
-        print_disable_warning(time_until_disable)
-    elif time_until_idlelock.days <= IDLELOCK_WARNING_RED_THRESHOLD_DAYS:
-        print_idlelock_warning(time_until_idlelock, red=True)
-    elif time_until_idlelock.days <= IDLELOCK_WARNING_THRESHOLD_DAYS:
-        print_idlelock_warning(time_until_idlelock)
+    owned_pi_group_name = None
     pi_group_warnings = []
     for gidnumber in os.getgroups():
         group_name = grp.getgrgid(gidnumber)[0]
         if not group_name.startswith("pi_"):
             continue
         owner_username = group_name[3:]
+        if owner_username == username:
+            owned_pi_group_name = group_name
+            continue
         owner_data = get_expiry_data(owner_username)
         remaining = time_until(owner_data["disable_date"])
         if remaining.days <= PI_GROUP_OWNER_DISABLE_WARNING_RED_THRESHOLD_DAYS:
             pi_group_warnings.append((group_name, owner_username, remaining))
+    if time_until_disable.days <= DISABLE_WARNING_RED_THRESHOLD_DAYS:
+        print_disable_warning(time_until_disable, owned_pi_group_name, red=True)
+    elif time_until_disable.days <= DISABLE_WARNING_THRESHOLD_DAYS:
+        print_disable_warning(time_until_disable, owned_pi_group_name)
+    elif time_until_idlelock.days <= IDLELOCK_WARNING_RED_THRESHOLD_DAYS:
+        print_idlelock_warning(time_until_idlelock, red=True)
+    elif time_until_idlelock.days <= IDLELOCK_WARNING_THRESHOLD_DAYS:
+        print_idlelock_warning(time_until_idlelock)
     print_pi_group_owner_disable_warning(pi_group_warnings)
 
 
