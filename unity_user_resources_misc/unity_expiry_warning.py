@@ -6,9 +6,7 @@ import ssl
 import sys
 from datetime import date, timedelta
 from http.client import HTTPResponse
-from json import JSONDecodeError
 from urllib import request
-from urllib.error import HTTPError, URLError
 
 IDLELOCK_WARNING_THRESHOLD_DAYS = 30
 IDLELOCK_WARNING_RED_THRESHOLD_DAYS = 7
@@ -90,19 +88,9 @@ def main():
     ssl_context.verify_mode = ssl.CERT_NONE
     username = pwd.getpwuid(os.getuid())[0]
     url = f"https://web/lan/api/expiry.php?uid={username}"
-    try:
-        response: HTTPResponse = request.urlopen(url, timeout=1, context=ssl_context)
-    except (HTTPError, URLError) as e:
-        logging.error("failed to query account portal", exc_info=e)
-        sys.exit(1)
-    if response.status != 200:
-        logging.error(f"{url=} {response.status=} {response.read()=}")
-        sys.exit(1)
-    try:
-        data = json.loads(response.read())
-    except JSONDecodeError as e:
-        logging.error("failed to JSON decode response from account portal", exc_info=e)
-        sys.exit(1)
+    response: HTTPResponse = request.urlopen(url, timeout=1, context=ssl_context)
+    assert response.status == 200
+    data = json.loads(response.read())
     idlelock_date = date.strptime(data["idlelock_date"], r"%Y/%m/%d")
     disable_date = date.strptime(data["disable_date"], r"%Y/%m/%d")
     time_until_idlelock = idlelock_date - date.today()
@@ -118,4 +106,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        logging.error("something went wrong", exc_info=e)
+        sys.exit(1)
