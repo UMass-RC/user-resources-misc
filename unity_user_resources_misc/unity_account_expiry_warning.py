@@ -9,6 +9,12 @@ from http.client import HTTPResponse
 from urllib import request
 from urllib.error import HTTPError
 
+"""
+queries the account portal's expiry API to determine when the current user is scheduled to expire
+if it's soon, print a warning message
+also make the same check for the owners of any PI groups the current user is a member of
+"""
+
 IDLELOCK_WARNING_THRESHOLD_DAYS = 30
 IDLELOCK_WARNING_RED_THRESHOLD_DAYS = 7
 DISABLE_WARNING_THRESHOLD_DAYS = 90
