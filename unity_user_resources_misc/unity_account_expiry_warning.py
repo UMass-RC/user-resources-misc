@@ -42,16 +42,25 @@ def timedelta2str(x: timedelta):
 
 
 def fmt_bold(x: str):
-    return f"\033[1m{x}\033[0m"
+    if os.getenv("NO_COLOR", "") != "":
+        return x
+    else:
+        return f"\033[1m{x}\033[0m"
 
 
 def fmt_red_maybe(x: str, enable: bool):
-    return f"\033[0;31m{x}\033[0m" if enable else x
+    if (not enable) or (os.getenv("NO_COLOR", "") != ""):
+        return x
+    else:
+        return f"\033[0;31m{x}\033[0m"
 
 
 def fmt_link(url: str, text: str):
     # https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda
-    return f"\033]8;;{url}\033\\{text}\033]8;;\033\\"
+    if os.getenv("NO_COLOR", "") != "":
+        return f"{text}: {url}"
+    else:
+        return f"\033]8;;{url}\033\\{text}\033]8;;\033\\"
 
 
 ACCOUNT_PORTAL = fmt_link("https://account.unityhpc.org", "Unity account portal")
