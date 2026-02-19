@@ -126,9 +126,6 @@ def time_until(_date: str) -> timedelta:
 
 def main():
     username = pwd.getpwuid(os.getuid())[0]
-    data = get_expiry_data(username)
-    time_until_idlelock = time_until(data["idlelock_date"])
-    time_until_disable = time_until(data["disable_date"])
     owned_pi_group_name = None
     pi_group_warnings = []
     for gidnumber in os.getgroups():
@@ -143,6 +140,10 @@ def main():
         remaining = time_until(owner_data["disable_date"])
         if remaining.days <= PI_GROUP_OWNER_DISABLE_WARNING_RED_THRESHOLD_DAYS:
             pi_group_warnings.append((group_name, owner_username, remaining))
+    print_pi_group_owner_disable_warning(pi_group_warnings)
+    data = get_expiry_data(username)
+    time_until_idlelock = time_until(data["idlelock_date"])
+    time_until_disable = time_until(data["disable_date"])
     if time_until_disable.days <= DISABLE_WARNING_RED_THRESHOLD_DAYS:
         print_disable_warning(time_until_disable, owned_pi_group_name, red=True)
     elif time_until_disable.days <= DISABLE_WARNING_THRESHOLD_DAYS:
@@ -151,7 +152,6 @@ def main():
         print_idlelock_warning(time_until_idlelock, red=True)
     elif time_until_idlelock.days <= IDLELOCK_WARNING_THRESHOLD_DAYS:
         print_idlelock_warning(time_until_idlelock)
-    print_pi_group_owner_disable_warning(pi_group_warnings)
 
 
 def main_fail_quietly():
