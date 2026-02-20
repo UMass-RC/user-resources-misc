@@ -1,7 +1,7 @@
 [project]
 name = "unity_user_resources_misc"
 version = "0.1"
-requires-python = ">=3.12"
+requires-python = "~=3.12"
 
 [project.scripts]
 unity-directories-usage = "unity_user_resources_misc.unity_disk_usage:main"

@@ -9,6 +9,6 @@ pre-commit:
     - pre-commit run --all-files --color always --show-diff-on-failure
 
 unittest:
-  image: python:latest
+  image: python:3.12
   script:
     - (cd test && PYTHONPATH="$(dirname "$PWD")" python -m unittest test*)
