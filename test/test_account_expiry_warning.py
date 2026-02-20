@@ -167,9 +167,7 @@ class TestCleanupQuotas(unittest.TestCase):
 
     def _show_output(self):
         self.configure_test(
-            {"foo": {"idlelock_date": days_from_today(1)}},
-            current_user="foo",
-            idlelock_thresh=1,
+            {"foo": {"idlelock_date": days_from_today(1)}}, current_user="foo", idlelock_thresh=1
         )
         _main()
         for p in self.patches:
