@@ -8,6 +8,7 @@ import unittest
 from datetime import datetime, timedelta
 from unittest.mock import _patch, patch
 
+from unity_user_resources_misc import temp_env
 from unity_user_resources_misc.unity_account_expiry_warning import _main
 
 """
@@ -67,10 +68,12 @@ class TestCleanupQuotas(unittest.TestCase):
         self.stdout_buffer = io.StringIO()
         self.stderr_buffer = io.StringIO()
 
-    def run_test(self) -> None:
-        with contextlib.redirect_stdout(self.stdout_buffer):
-            with contextlib.redirect_stderr(self.stderr_buffer):
-                _main()
+    def run_test(self, env: dict | None = None) -> None:
+        env = {} if env is None else env
+        with temp_env(env):
+            with contextlib.redirect_stdout(self.stdout_buffer):
+                with contextlib.redirect_stderr(self.stderr_buffer):
+                    _main()
 
     def assert_test_results(
         self, idlelock_warning, group_warnings: list[str], stderr_regex=r"", debug=False
@@ -94,7 +97,9 @@ class TestCleanupQuotas(unittest.TestCase):
         # check for group names
         for owner in group_warnings:
             assert owner in stdout
-        # cleanup
+        self.cleanup()
+
+    def cleanup(self):
         self.stdout_buffer = None
         self.stderr_buffer = None
         for p in self.patches:
@@ -165,14 +170,16 @@ class TestCleanupQuotas(unittest.TestCase):
         self.run_test()
         self.assert_test_results(idlelock_warning=False, group_warnings=["bar", "baz"])
 
-    def _show_output(self):
+    def _show_output(self, env: dict | None = None):
         # account warning
         self.configure_test(
             {"foo": {"idlelock_date": days_from_today(1)}}, current_user="foo", idlelock_thresh=1
         )
-        _main()
-        for p in self.patches:
-            p.stop()
+        self.run_test(env)
+        assert self.stdout_buffer is not None
+        print(self.stdout_buffer.getvalue().strip())
+        print("---")
+        self.cleanup()
         # 1 PI group warning
         self.configure_test(
             {
@@ -183,9 +190,11 @@ class TestCleanupQuotas(unittest.TestCase):
             current_user_groups=["pi_bar"],
             group_thresh=1,
         )
-        _main()
-        for p in self.patches:
-            p.stop()
+        self.run_test(env)
+        assert self.stdout_buffer is not None
+        print(self.stdout_buffer.getvalue().strip())
+        print("---")
+        self.cleanup()
         # 2 PI group warnings
         self.configure_test(
             {
@@ -197,23 +206,10 @@ class TestCleanupQuotas(unittest.TestCase):
             current_user_groups=["pi_bar", "pi_baz"],
             group_thresh=1,
         )
-        _main()
-        for p in self.patches:
-            p.stop()
-
-    def _show_output_with_env(self, env: dict):
-        previous_env_vars = os.environ.copy()
-        for k, v in env.items():
-            os.environ[k] = v
-        try:
-            self._show_output()
-        finally:
-            for k in env.keys():
-                v = previous_env_vars.get(k)
-                if v is None:
-                    del os.environ[k]
-                else:
-                    os.environ[k] = v
+        self.run_test(env)
+        assert self.stdout_buffer is not None
+        print(self.stdout_buffer.getvalue().strip())
+        self.cleanup()
 
     def test_show_output(self):
         assert os.getenv("TERM") != "dumb"
@@ -222,12 +218,12 @@ class TestCleanupQuotas(unittest.TestCase):
         print("---")
         print("full style:")
         print("---")
-        self._show_output_with_env({"TERM": "xterm-256color"})
+        self._show_output({"FORCE_COLOR": "1", "FORCE_ANSI": "1"})
         print("---")
         print("style with no color:")
         print("---")
-        self._show_output_with_env({"TERM": "xterm-256color", "NO_COLOR": "1"})
+        self._show_output({"FORCE_ANSI": "1", "NO_COLOR": "1"})
         print("---")
         print("no style:")
         print("---")
-        self._show_output_with_env({"TERM": "dumb"})
+        self._show_output({"TERM": "dumb"})

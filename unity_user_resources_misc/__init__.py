@@ -2,6 +2,7 @@ import os
 import re
 import sys
 from collections.abc import Sequence
+from contextlib import contextmanager
 
 
 def printable_length(x: str) -> int:
@@ -65,6 +66,8 @@ def do_color() -> bool:
 
 
 def do_ansi() -> bool:
+    if os.getenv("FORCE_ANSI", "") != "":
+        return True
     if os.getenv("FORCE_COLOR", "") != "":
         return True
     if not sys.stdout.isatty():
@@ -104,3 +107,19 @@ def human_readable_count(count: int) -> str:
         return str(current_count)  # no decimals
     else:
         return f"{current_count:.2f} {current_unit}"
+
+
+@contextmanager
+def temp_env(env: dict):
+    previous_env_vars = os.environ.copy()
+    for k, v in env.items():
+        os.environ[k] = v
+    try:
+        yield
+    finally:
+        for k in env.keys():
+            v = previous_env_vars.get(k)
+            if v is None:
+                del os.environ[k]
+            else:
+                os.environ[k] = v
