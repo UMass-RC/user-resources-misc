@@ -28,12 +28,12 @@ class TestCleanupQuotas(unittest.TestCase):
         self,
         data: dict[str, dict[str, str]],
         current_user: str,
-        groups: list[str] | None = None,
+        current_user_groups: list[str] | None = None,
         idlelock_thresh=-1,
         idlelock_red_thresh=-1,
         group_thresh=-1,
     ):
-        groups = [] if groups is None else groups
+        current_user_groups = [] if current_user_groups is None else current_user_groups
         prefix = "unity_user_resources_misc.unity_account_expiry_warning"
         self.patches = [
             patch(f"{prefix}.IDLELOCK_WARNING_THRESHOLD_DAYS", idlelock_thresh),
@@ -42,8 +42,8 @@ class TestCleanupQuotas(unittest.TestCase):
             patch(f"{prefix}.get_expiry_data", lambda x: data[x]),
             patch(f"{prefix}.os.getuid", lambda: 1),
             patch(f"{prefix}.pwd.getpwuid", lambda uidnumber: [current_user]),
-            patch(f"{prefix}.os.getgroups", lambda: range(len(groups))),
-            patch(f"{prefix}.grp.getgrgid", lambda gid: groups[gid]),
+            patch(f"{prefix}.os.getgroups", lambda: range(len(current_user_groups))),
+            patch(f"{prefix}.grp.getgrgid", lambda gid: current_user_groups[gid]),
         ]
         for p in self.patches:
             p.start()
@@ -104,8 +104,8 @@ class TestCleanupQuotas(unittest.TestCase):
                 "foo": {"idlelock_date": days_from_today(100)},
                 "bar": {"disable_date": days_from_today(100)},
             },
-            "foo",
-            ["pi_bar"],
+            current_user="foo",
+            current_user_groups=["pi_bar"],
             idlelock_thresh=2,
             idlelock_red_thresh=1,
             group_thresh=1,
@@ -113,10 +113,19 @@ class TestCleanupQuotas(unittest.TestCase):
         self.run_test()
         self.assert_test_results(idlelock_warning=False, group_owners_warned=[])
 
-    def test_idlelock_warning(self):
+    def test_idlelock_warning_lessthan(self):
+        self.configure_test(
+            {"foo": {"idlelock_date": days_from_today(1)}},
+            current_user="foo",
+            idlelock_thresh=2,
+        )
+        self.run_test()
+        self.assert_test_results(idlelock_warning=True, group_owners_warned=[])
+
+    def test_idlelock_warning_equalto(self):
         self.configure_test(
             {"foo": {"idlelock_date": days_from_today(2)}},
-            "foo",
+            current_user="foo",
             idlelock_thresh=2,
         )
         self.run_test()
