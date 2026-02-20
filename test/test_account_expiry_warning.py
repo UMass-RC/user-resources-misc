@@ -171,7 +171,7 @@ class TestCleanupQuotas(unittest.TestCase):
                 "baz": {"disable_date": days_from_today(1)},
             },
             current_user="foo",
-            current_user_groups=["pi_bar, pi_baz"],
+            current_user_groups=["pi_bar", "pi_baz"],
             group_thresh=1,
             debug=True,
         )
