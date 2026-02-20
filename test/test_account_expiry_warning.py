@@ -2,7 +2,6 @@
 import contextlib
 import io
 import re
-import sys
 import unittest
 from datetime import datetime, timedelta
 from unittest.mock import _patch, patch
@@ -28,11 +27,12 @@ class TestCleanupQuotas(unittest.TestCase):
         self,
         data: dict[str, dict[str, str]],
         current_user: str,
-        groups: list[str],
-        idlelock_thresh=sys.maxsize,
-        idlelock_red_thresh=sys.maxsize,
-        group_thresh=sys.maxsize,
+        groups: list[str] | None = None,
+        idlelock_thresh=-1,
+        idlelock_red_thresh=-1,
+        group_thresh=-1,
     ):
+        groups = [] if groups is None else groups
         prefix = "unity_user_resources_misc.unity_account_expiry_warning"
         self.patches = [
             patch(f"{prefix}.IDLELOCK_WARNING_THRESHOLD_DAYS", idlelock_thresh),
