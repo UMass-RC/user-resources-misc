@@ -48,8 +48,14 @@ def timedelta2str(x: timedelta):
         return f"{(x.microseconds * 1000 * 1000):.2f} seconds"
 
 
-PORTAL = fmt_link("https://account.unityhpc.org", "Unity account portal")
-POLICY = fmt_link("https://unityhpc.org/about/account-expiration/", "account expiration policy")
+# this is not a constant so that the test cases can change the styling with environment variables
+def PORTAL():
+    return fmt_link("https://account.unityhpc.org", "Unity account portal")
+
+
+# this is not a constant so that the test cases can change the styling with environment variables
+def POLICY():
+    return fmt_link("https://unityhpc.org/about/account-expiration/", "account expiration policy")
 
 
 def print_idlelock_warning(time_until_idlelock: timedelta):
@@ -58,8 +64,8 @@ def print_idlelock_warning(time_until_idlelock: timedelta):
             [
                 fmt_red(fmt_bold("Account Expiration Warning")),
                 f"Your account is scheduled to be idle-locked in {timedelta2str(time_until_idlelock)}.",
-                f"To prevent this, simply log in to the {PORTAL}.",
-                f"For more information, see our {POLICY}.",
+                f"To prevent this, simply log in to the {PORTAL()}.",
+                f"For more information, see our {POLICY()}.",
                 "",
             ]
         )
@@ -74,13 +80,13 @@ def print_pi_group_owner_disable_warning(group_data: list[tuple]):
     if len(group_data) == 1:
         group_name, owner, remaining = group_data[0]
         print(f"The owner of PI group '{group_name}' is scheduled to be disabled in {remaining}.")
-        print(f"To prevent this, the group owner '{owner}' must simply log in to the {PORTAL}.")
+        print(f"To prevent this, the group owner '{owner}' must simply log in to the {PORTAL()}.")
     else:
         print("The owners of the following PI groups are scheduled to be disabled:")
         table = [["Group Name", "Owner Username", "Time until Disable"]] + group_data
         print("\n".join(fmt_table(table)))
-        print(f"To prevent this, each group owner must simply log in to the {PORTAL}.")
-    print(f"For more information, see our {POLICY}.")
+        print(f"To prevent this, each group owner must simply log in to the {PORTAL()}.")
+    print(f"For more information, see our {POLICY()}.")
     print()
 
 
