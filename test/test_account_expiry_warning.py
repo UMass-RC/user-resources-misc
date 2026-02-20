@@ -101,8 +101,8 @@ class TestCleanupQuotas(unittest.TestCase):
     def test_no_warnings(self):
         self.configure_test(
             {
-                "foo": {"idlelock_date": days_from_today(100)},
-                "bar": {"disable_date": days_from_today(100)},
+                "foo": {"idlelock_date": days_from_today(3)},
+                "bar": {"disable_date": days_from_today(2)},
             },
             current_user="foo",
             current_user_groups=["pi_bar"],
