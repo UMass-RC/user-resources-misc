@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import contextlib
 import io
+import json
 import re
 import unittest
 from datetime import datetime, timedelta
@@ -54,7 +55,7 @@ class TestCleanupQuotas(unittest.TestCase):
             with contextlib.redirect_stderr(self.stderr_buffer):
                 _main()
 
-    def assert_test_results(
+    def _assert_test_results(
         self, idlelock_warning, group_owners_warned: list[str], stderr_regex=r""
     ):
         assert self.stdout_buffer is not None and self.stderr_buffer is not None
@@ -76,6 +77,26 @@ class TestCleanupQuotas(unittest.TestCase):
         self.stderr_buffer = None
         for p in self.patches:
             p.stop()
+
+    def assert_test_results(
+        self, idlelock_warning, group_owners_warned: list[str], stderr_regex=r""
+    ):
+        assert self.stdout_buffer is not None and self.stderr_buffer is not None
+        stdout_lines = self.stdout_buffer.getvalue().splitlines()
+        stderr_lines = self.stderr_buffer.getvalue().splitlines()
+        try:
+            self._assert_test_results(
+                idlelock_warning, group_owners_warned, stderr_regex=stderr_regex
+            )
+        except AssertionError as e:
+            e.add_note(
+                json.dumps({"stdout_lines": stdout_lines, "stderr_lines": stderr_lines}, indent=4)
+            )
+            raise e
+
+    # END TOOLING
+    ################################################################################################
+    # BEGIN TEST CASES
 
     def test_no_warnings(self):
         self.configure_test(
