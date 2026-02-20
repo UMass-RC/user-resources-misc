@@ -201,16 +201,19 @@ class TestCleanupQuotas(unittest.TestCase):
         for p in self.patches:
             p.stop()
 
-    def _show_output_with_env(self, env_var_name, env_var_value):
-        previous_env_var = os.environ.get(env_var_name)
-        os.environ[env_var_name] = env_var_value
+    def _show_output_with_env(self, env: dict):
+        previous_env_vars = os.environ.copy()
+        for k, v in env.items():
+            os.environ[k] = v
         try:
             self._show_output()
         finally:
-            if previous_env_var is None:
-                del os.environ[env_var_name]
-            else:
-                os.environ[env_var_name] = previous_env_var
+            for k in env.keys():
+                v = previous_env_vars.get(k)
+                if v is None:
+                    del os.environ[k]
+                else:
+                    os.environ[k] = v
 
     def test_show_output(self):
         assert os.getenv("TERM") != "dumb"
@@ -219,12 +222,12 @@ class TestCleanupQuotas(unittest.TestCase):
         print("---")
         print("full style:")
         print("---")
-        self._show_output_with_env("FORCE_COLOR", "1")
+        self._show_output_with_env({"TERM": "xterm-256color"})
         print("---")
         print("style with no color:")
         print("---")
-        self._show_output_with_env("NO_COLOR", "1")
+        self._show_output_with_env({"TERM": "xterm-256color", "NO_COLOR": "1"})
         print("---")
         print("no style:")
         print("---")
-        self._show_output_with_env("TERM", "dumb")
+        self._show_output_with_env({"TERM": "dumb"})
