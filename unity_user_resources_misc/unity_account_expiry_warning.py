@@ -13,15 +13,17 @@ from urllib.error import HTTPError
 from unity_user_resources_misc import fmt_bold, fmt_link, fmt_red, fmt_table
 
 """
-queries the account portal's expiry API to determine when the current user is scheduled to expire
-if it's soon, print a warning message
-also make the same check for the owners of any PI groups the current user is a member of
+* queries the account portal's expiry API to determine when the current user is scheduled to expire
+* if it's soon, print a warning message
+* also make the same check for the owners of any PI groups the current user is a member of
+
+During the expiration process, the user is idle-locked and then later disabled.
+A warning is only printed out for the idle-lock, not for the disabling.
+Once the user is idle-locked, they cannot login so there's no point in printing a message for them.
 """
 
 IDLELOCK_WARNING_THRESHOLD_DAYS = 5 * 7
 IDLELOCK_WARNING_RED_THRESHOLD_DAYS = 7
-DISABLE_WARNING_THRESHOLD_DAYS = 9 * 7
-DISABLE_WARNING_RED_THRESHOLD_DAYS = 7
 PI_GROUP_OWNER_DISABLE_WARNING_RED_THRESHOLD_DAYS = 9 * 7
 
 
@@ -70,25 +72,6 @@ def print_idlelock_warning(time_until_idlelock: timedelta, red=False):
     )
 
 
-def print_disable_warning(time_until_disable, owned_pi_group_name: str | None, red=False):
-    if owned_pi_group_name is not None:
-        owned_group_note_lines = [f"Your PI group '{owned_pi_group_name}' will also be disabled."]
-    else:
-        owned_group_note_lines = []
-    print(
-        "\n".join(
-            [
-                fmt_red_maybe(fmt_bold("Account Expiration Warning"), red),
-                f"Your account is scheduled to be disabled in {timedelta2str(time_until_disable)}.",
-                *owned_group_note_lines,
-                f"To prevent this, simply log in to the {PORTAL}.",
-                f"For more information, see our {POLICY}.",
-                "",
-            ]
-        )
-    )
-
-
 def print_pi_group_owner_disable_warning(group_data: list[tuple]):
     if len(group_data) == 0:
         return
@@ -126,16 +109,12 @@ def time_until(_date: str) -> timedelta:
 
 def main():
     username = pwd.getpwuid(os.getuid())[0]
-    owned_pi_group_name = None
     pi_group_warnings = []
     for gidnumber in os.getgroups():
         group_name = grp.getgrgid(gidnumber)[0]
         if not group_name.startswith("pi_"):
             continue
         owner_username = group_name[3:]
-        if owner_username == username:
-            owned_pi_group_name = group_name
-            continue
         owner_data = get_expiry_data(owner_username)
         remaining = time_until(owner_data["disable_date"])
         if remaining.days <= PI_GROUP_OWNER_DISABLE_WARNING_RED_THRESHOLD_DAYS:
@@ -143,12 +122,7 @@ def main():
     print_pi_group_owner_disable_warning(pi_group_warnings)
     data = get_expiry_data(username)
     time_until_idlelock = time_until(data["idlelock_date"])
-    time_until_disable = time_until(data["disable_date"])
-    if time_until_disable.days <= DISABLE_WARNING_RED_THRESHOLD_DAYS:
-        print_disable_warning(time_until_disable, owned_pi_group_name, red=True)
-    elif time_until_disable.days <= DISABLE_WARNING_THRESHOLD_DAYS:
-        print_disable_warning(time_until_disable, owned_pi_group_name)
-    elif time_until_idlelock.days <= IDLELOCK_WARNING_RED_THRESHOLD_DAYS:
+    if time_until_idlelock.days <= IDLELOCK_WARNING_RED_THRESHOLD_DAYS:
         print_idlelock_warning(time_until_idlelock, red=True)
     elif time_until_idlelock.days <= IDLELOCK_WARNING_THRESHOLD_DAYS:
         print_idlelock_warning(time_until_idlelock)
