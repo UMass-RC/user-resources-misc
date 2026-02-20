@@ -119,6 +119,8 @@ def _main():
         if not group_name.startswith("pi_"):
             continue
         owner_username = group_name[3:]
+        if owner_username == username:
+            continue
         owner_data = get_expiry_data(owner_username)
         remaining = time_until(owner_data["disable_date"])
         if remaining.days <= PI_GROUP_OWNER_DISABLE_WARNING_RED_THRESHOLD_DAYS:
