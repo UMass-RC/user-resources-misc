@@ -136,11 +136,11 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--verbose", action="store_true")
     args = parser.parse_args()
-    if args.verbose:
+    try:
         _main()
-    else:
-        try:
-            _main()
-        except Exception as e:
+    except Exception as e:
+        if args.verbose:
+            raise
+        else:
             logging.error("something went wrong", exc_info=e)
             sys.exit(1)
