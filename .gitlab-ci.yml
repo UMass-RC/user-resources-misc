@@ -8,7 +8,7 @@ pre-commit:
     - apk add git pre-commit
     - pre-commit run --all-files --color always --show-diff-on-failure
 
-pytest:
+unittest:
   image: python:latest
   script:
     - (cd test && PYTHONPATH="$(dirname "$PWD")" python -m unittest test*)
