@@ -4,7 +4,11 @@
 # I could apk install nodejs but it's faster to just use that as the base image
 pre-commit:
   image: node:current-alpine
-  stage: test
   script:
     - apk add git pre-commit
     - pre-commit run --all-files --color always --show-diff-on-failure
+
+pytest:
+  image: python:latest
+  script:
+    - PYTHONPATH="$PWD" pytest test

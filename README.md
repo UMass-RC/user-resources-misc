@@ -4,3 +4,8 @@ install:
 ```
 pip install .
 ```
+
+test:
+```
+PYTHONPATH="$PWD" pytest test
+```
