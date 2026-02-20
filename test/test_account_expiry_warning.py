@@ -72,7 +72,7 @@ class TestCleanupQuotas(unittest.TestCase):
                 _main()
 
     def assert_test_results(
-        self, idlelock_warning, group_owners_warned: list[str], stderr_regex=r"", debug=False
+        self, idlelock_warning, group_warnings: list[str], stderr_regex=r"", debug=False
     ):
         assert self.stdout_buffer is not None and self.stderr_buffer is not None
         stdout = self.stdout_buffer.getvalue().strip()
@@ -89,9 +89,9 @@ class TestCleanupQuotas(unittest.TestCase):
         group_warning_headers = [x for x in stdout_lines if "Group Owner Expiration Warning" in x]
         self.assertEqual(1 if idlelock_warning else 0, len(idlelock_warning_headers))
         # mulitple group warnings share the same header
-        self.assertEqual(1 if len(group_owners_warned) > 0 else 0, len(group_warning_headers))
+        self.assertEqual(1 if len(group_warnings) > 0 else 0, len(group_warning_headers))
         # check for group names
-        for owner in group_owners_warned:
+        for owner in group_warnings:
             assert owner in stdout
         # cleanup
         self.stdout_buffer = None
@@ -115,7 +115,7 @@ class TestCleanupQuotas(unittest.TestCase):
             group_thresh=1,
         )
         self.run_test()
-        self.assert_test_results(idlelock_warning=False, group_owners_warned=[])
+        self.assert_test_results(idlelock_warning=False, group_warnings=[])
 
     def test_idlelock_warning_lessthan(self):
         self.configure_test(
@@ -124,7 +124,7 @@ class TestCleanupQuotas(unittest.TestCase):
             idlelock_thresh=2,
         )
         self.run_test()
-        self.assert_test_results(idlelock_warning=True, group_owners_warned=[])
+        self.assert_test_results(idlelock_warning=True, group_warnings=[])
 
     def test_idlelock_warning_equalto(self):
         self.configure_test(
@@ -133,7 +133,7 @@ class TestCleanupQuotas(unittest.TestCase):
             idlelock_thresh=2,
         )
         self.run_test()
-        self.assert_test_results(idlelock_warning=True, group_owners_warned=[])
+        self.assert_test_results(idlelock_warning=True, group_warnings=[])
 
     def test_group_warning(self):
         self.configure_test(
@@ -147,7 +147,7 @@ class TestCleanupQuotas(unittest.TestCase):
             debug=True,
         )
         self.run_test()
-        self.assert_test_results(idlelock_warning=False, group_owners_warned=["bar"])
+        self.assert_test_results(idlelock_warning=False, group_warnings=["bar"])
 
     def test_multiple_group_warnings(self):
         self.configure_test(
@@ -162,7 +162,7 @@ class TestCleanupQuotas(unittest.TestCase):
             debug=True,
         )
         self.run_test()
-        self.assert_test_results(idlelock_warning=False, group_owners_warned=["bar", "baz"])
+        self.assert_test_results(idlelock_warning=False, group_warnings=["bar", "baz"])
 
     def test_show_output(self):
         self.configure_test(
