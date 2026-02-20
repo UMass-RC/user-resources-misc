@@ -166,12 +166,14 @@ class TestCleanupQuotas(unittest.TestCase):
         self.assert_test_results(idlelock_warning=False, group_warnings=["bar", "baz"])
 
     def _show_output(self):
+        # account warning
         self.configure_test(
             {"foo": {"idlelock_date": days_from_today(1)}}, current_user="foo", idlelock_thresh=1
         )
         _main()
         for p in self.patches:
             p.stop()
+        # 1 PI group warning
         self.configure_test(
             {
                 "foo": {"idlelock_date": days_from_today(100)},
@@ -184,6 +186,7 @@ class TestCleanupQuotas(unittest.TestCase):
         _main()
         for p in self.patches:
             p.stop()
+        # 2 PI group warnings
         self.configure_test(
             {
                 "foo": {"idlelock_date": days_from_today(100)},
