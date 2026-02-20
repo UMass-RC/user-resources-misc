@@ -19,6 +19,15 @@ def days_from_today(x: int) -> str:
     return datetime.strftime(datetime.today() + timedelta(days=x), "%Y/%m/%d")
 
 
+class MockHTTPResponse:
+    def __init__(self, status: int, _bytes: bytes):
+        self.status = status
+        self._bytes = _bytes
+
+    def read(self) -> bytes:
+        return self._bytes
+
+
 class TestCleanupQuotas(unittest.TestCase):
     patches: list[_patch]
     stdout_buffer: io.StringIO | None
@@ -35,12 +44,19 @@ class TestCleanupQuotas(unittest.TestCase):
         debug=False,
     ):
         current_user_groups = [] if current_user_groups is None else current_user_groups
+
+        def urlopen(url: str, **kwargs):
+            _, query_param = url.split("?")
+            query_param_key, query_param_val = query_param.split("=")
+            assert query_param_key == "uid"
+            return MockHTTPResponse(200, json.dumps(data[query_param_val]).encode())
+
         prefix = "unity_user_resources_misc.unity_account_expiry_warning"
         self.patches = [
             patch(f"{prefix}.IDLELOCK_WARNING_THRESHOLD_DAYS", idlelock_thresh),
             patch(f"{prefix}.IDLELOCK_WARNING_RED_THRESHOLD_DAYS", idlelock_red_thresh),
             patch(f"{prefix}.PI_GROUP_OWNER_DISABLE_WARNING_RED_THRESHOLD_DAYS", group_thresh),
-            patch(f"{prefix}.get_expiry_data", lambda x: data[x]),
+            patch(f"{prefix}.request.urlopen", urlopen),
             patch(f"{prefix}.os.getuid", lambda: 1),
             patch(f"{prefix}.pwd.getpwuid", lambda uidnumber: [current_user]),
             patch(f"{prefix}.os.getgroups", lambda: range(len(current_user_groups))),
@@ -146,3 +162,18 @@ class TestCleanupQuotas(unittest.TestCase):
         )
         self.run_test()
         self.assert_test_results(idlelock_warning=False, group_owners_warned=["bar"])
+
+    def test_multiple_group_warnings(self):
+        self.configure_test(
+            {
+                "foo": {"idlelock_date": days_from_today(100)},
+                "bar": {"disable_date": days_from_today(1)},
+                "baz": {"disable_date": days_from_today(1)},
+            },
+            current_user="foo",
+            current_user_groups=["pi_bar, pi_baz"],
+            group_thresh=1,
+            debug=True,
+        )
+        self.run_test()
+        self.assert_test_results(idlelock_warning=False, group_owners_warned=["bar", "baz"])
