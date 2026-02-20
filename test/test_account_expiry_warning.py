@@ -39,7 +39,6 @@ class TestCleanupQuotas(unittest.TestCase):
         current_user: str,
         current_user_groups: list[str] | None = None,
         idlelock_thresh=-1,
-        idlelock_red_thresh=-1,
         group_thresh=-1,
         debug=False,
     ):
@@ -54,8 +53,7 @@ class TestCleanupQuotas(unittest.TestCase):
         prefix = "unity_user_resources_misc.unity_account_expiry_warning"
         self.patches = [
             patch(f"{prefix}.IDLELOCK_WARNING_THRESHOLD_DAYS", idlelock_thresh),
-            patch(f"{prefix}.IDLELOCK_WARNING_RED_THRESHOLD_DAYS", idlelock_red_thresh),
-            patch(f"{prefix}.PI_GROUP_OWNER_DISABLE_WARNING_RED_THRESHOLD_DAYS", group_thresh),
+            patch(f"{prefix}.PI_GROUP_OWNER_DISABLE_WARNING_THRESHOLD_DAYS", group_thresh),
             patch(f"{prefix}.request.urlopen", urlopen),
             patch(f"{prefix}.os.getuid", lambda: 1),
             patch(f"{prefix}.pwd.getpwuid", lambda uidnumber: [current_user]),
@@ -114,7 +112,6 @@ class TestCleanupQuotas(unittest.TestCase):
             current_user="foo",
             current_user_groups=["pi_bar"],
             idlelock_thresh=2,
-            idlelock_red_thresh=1,
             group_thresh=1,
         )
         self.run_test()
@@ -166,3 +163,34 @@ class TestCleanupQuotas(unittest.TestCase):
         )
         self.run_test()
         self.assert_test_results(idlelock_warning=False, group_owners_warned=["bar", "baz"])
+
+    def test_show_output(self):
+        self.configure_test(
+            {"foo": {"idlelock_date": days_from_today(1)}},
+            current_user="foo",
+            idlelock_thresh=1,
+        )
+        print()
+        print()
+        _main()
+        self.configure_test(
+            {
+                "foo": {"idlelock_date": days_from_today(100)},
+                "bar": {"disable_date": days_from_today(1)},
+            },
+            current_user="foo",
+            current_user_groups=["pi_bar"],
+            group_thresh=1,
+        )
+        _main()
+        self.configure_test(
+            {
+                "foo": {"idlelock_date": days_from_today(100)},
+                "bar": {"disable_date": days_from_today(1)},
+                "baz": {"disable_date": days_from_today(1)},
+            },
+            current_user="foo",
+            current_user_groups=["pi_bar", "pi_baz"],
+            group_thresh=1,
+        )
+        _main()

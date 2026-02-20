@@ -24,8 +24,7 @@ Once the user is idle-locked, they cannot login so there's no point in printing 
 """
 
 IDLELOCK_WARNING_THRESHOLD_DAYS = 5 * 7
-IDLELOCK_WARNING_RED_THRESHOLD_DAYS = 7
-PI_GROUP_OWNER_DISABLE_WARNING_RED_THRESHOLD_DAYS = 9 * 7
+PI_GROUP_OWNER_DISABLE_WARNING_THRESHOLD_DAYS = 9 * 7
 DEBUG = False
 
 
@@ -49,22 +48,15 @@ def timedelta2str(x: timedelta):
         return f"{(x.microseconds * 1000 * 1000):.2f} seconds"
 
 
-def fmt_red_maybe(x: str, enable: bool):
-    if enable:
-        return fmt_red(x)
-    else:
-        return x
-
-
 PORTAL = fmt_link("https://account.unityhpc.org", "Unity account portal")
 POLICY = fmt_link("https://unityhpc.org/about/account-expiration/", "account expiration policy")
 
 
-def print_idlelock_warning(time_until_idlelock: timedelta, red=False):
+def print_idlelock_warning(time_until_idlelock: timedelta):
     print(
         "\n".join(
             [
-                fmt_red_maybe(fmt_bold("Account Expiration Warning"), red),
+                fmt_red(fmt_bold("Account Expiration Warning")),
                 f"Your account is scheduled to be idle-locked in {timedelta2str(time_until_idlelock)}.",
                 f"To prevent this, simply log in to the {PORTAL}.",
                 f"For more information, see our {POLICY}.",
@@ -126,15 +118,13 @@ def _main():
         remaining = time_until(owner_data["disable_date"])
         if DEBUG:
             print(f"time until PI group '{group_name} is disabled: {remaining}")
-        if remaining.days <= PI_GROUP_OWNER_DISABLE_WARNING_RED_THRESHOLD_DAYS:
+        if remaining.days <= PI_GROUP_OWNER_DISABLE_WARNING_THRESHOLD_DAYS:
             pi_group_warnings.append((group_name, owner_username, remaining))
     print_pi_group_owner_disable_warning(pi_group_warnings)
     data = get_expiry_data(username)
     time_until_idlelock = time_until(data["idlelock_date"])
     if DEBUG:
         print(f"{time_until_idlelock=}")
-    if time_until_idlelock.days <= IDLELOCK_WARNING_RED_THRESHOLD_DAYS:
-        print_idlelock_warning(time_until_idlelock, red=True)
     elif time_until_idlelock.days <= IDLELOCK_WARNING_THRESHOLD_DAYS:
         print_idlelock_warning(time_until_idlelock)
 
