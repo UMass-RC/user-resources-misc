@@ -165,7 +165,7 @@ class TestCleanupQuotas(unittest.TestCase):
         self.run_test()
         self.assert_test_results(idlelock_warning=False, group_warnings=["bar", "baz"])
 
-    def show_output(self):
+    def _show_output(self):
         self.configure_test(
             {"foo": {"idlelock_date": days_from_today(1)}},
             current_user="foo",
@@ -200,11 +200,11 @@ class TestCleanupQuotas(unittest.TestCase):
         for p in self.patches:
             p.stop()
 
-    def show_output_with_env(self, env_var_name, env_var_value):
+    def _show_output_with_env(self, env_var_name, env_var_value):
         previous_env_var = os.environ.get(env_var_name)
         os.environ[env_var_name] = env_var_value
         try:
-            self.show_output()
+            self._show_output()
         finally:
             if previous_env_var is None:
                 del os.environ[env_var_name]
@@ -218,10 +218,10 @@ class TestCleanupQuotas(unittest.TestCase):
         print()
         print("full style:")
         print()
-        self.show_output()
+        self._show_output()
         print("style with no color:")
         print()
-        self.show_output_with_env("NO_COLOR", "1")
+        self._show_output_with_env("NO_COLOR", "1")
         print("no style:")
         print()
-        self.show_output_with_env("TERM", "dumb")
+        self._show_output_with_env("TERM", "dumb")
