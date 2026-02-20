@@ -2,6 +2,7 @@
 import contextlib
 import io
 import json
+import os
 import re
 import unittest
 from datetime import datetime, timedelta
@@ -164,7 +165,7 @@ class TestCleanupQuotas(unittest.TestCase):
         self.run_test()
         self.assert_test_results(idlelock_warning=False, group_warnings=["bar", "baz"])
 
-    def test_show_output(self):
+    def show_output(self):
         self.configure_test(
             {"foo": {"idlelock_date": days_from_today(1)}},
             current_user="foo",
@@ -194,3 +195,27 @@ class TestCleanupQuotas(unittest.TestCase):
             group_thresh=1,
         )
         _main()
+
+    def show_output_with_env(self, env_var_name, env_var_value):
+        previous_env_var = os.environ.get(env_var_name)
+        os.environ[env_var_name] = env_var_value
+        try:
+            self.show_output()
+        finally:
+            if previous_env_var is None:
+                del os.environ[env_var_name]
+            else:
+                os.environ[env_var_name] = previous_env_var
+
+    def test_show_output_full_style(self):
+        assert os.getenv("TERM") != "dumb"
+        assert "NO_COLOR" not in os.environ
+        self.show_output()
+
+    def test_show_output_no_color(self):
+        assert os.getenv("TERM") != "dumb"
+        assert "NO_COLOR" not in os.environ
+        self.show_output_with_env("NO_COLOR", "1")
+
+    def test_show_output_no_style(self):
+        self.show_output_with_env("TERM", "dumb")
