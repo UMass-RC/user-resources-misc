@@ -11,7 +11,7 @@ from unity_user_resources_misc.unity_account_expiry_warning import _main
 
 """
 see CONTRIBUTING.md for instructions on how to run tests
-to debug a test, use the `debug` parameter for `configure_test`
+to debug a test, use the `debug` parameter for `configure_test` and `assert_test_results`
 """
 
 
@@ -73,13 +73,18 @@ class TestCleanupQuotas(unittest.TestCase):
             with contextlib.redirect_stderr(self.stderr_buffer):
                 _main()
 
-    def _assert_test_results(
-        self, idlelock_warning, group_owners_warned: list[str], stderr_regex=r""
+    def assert_test_results(
+        self, idlelock_warning, group_owners_warned: list[str], stderr_regex=r"", debug=False
     ):
         assert self.stdout_buffer is not None and self.stderr_buffer is not None
         stdout = self.stdout_buffer.getvalue().strip()
         stdout_lines = stdout.splitlines()
         stderr = self.stderr_buffer.getvalue().strip()
+        stderr_lines = stderr.splitlines()
+        if debug:
+            print(
+                json.dumps({"stdout_lines": stdout_lines, "stderr_lines": stderr_lines}, indent=4)
+            )
         assert re.fullmatch(stderr_regex, stderr)
         # check for headers
         idlelock_warning_headers = [x for x in stdout_lines if "Account Expiration Warning" in x]
@@ -95,22 +100,6 @@ class TestCleanupQuotas(unittest.TestCase):
         self.stderr_buffer = None
         for p in self.patches:
             p.stop()
-
-    def assert_test_results(
-        self, idlelock_warning, group_owners_warned: list[str], stderr_regex=r""
-    ):
-        assert self.stdout_buffer is not None and self.stderr_buffer is not None
-        stdout_lines = self.stdout_buffer.getvalue().splitlines()
-        stderr_lines = self.stderr_buffer.getvalue().splitlines()
-        try:
-            self._assert_test_results(
-                idlelock_warning, group_owners_warned, stderr_regex=stderr_regex
-            )
-        except AssertionError as e:
-            e.add_note(
-                json.dumps({"stdout_lines": stdout_lines, "stderr_lines": stderr_lines}, indent=4)
-            )
-            raise e
 
     # END TOOLING
     ################################################################################################

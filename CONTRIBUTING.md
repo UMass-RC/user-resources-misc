@@ -18,7 +18,7 @@ uv pip install --python=./venv/bin/python -r requirements-dev.txt
 ## test:
 
 ```shell
-PYTHONPATH="$PWD" pytest test
+PYTHONPATH="$PWD" pytest -s test
 ```
 
 or...
