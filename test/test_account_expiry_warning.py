@@ -14,6 +14,10 @@ from unity_user_resources_misc.unity_account_expiry_warning import _main
 """
 see CONTRIBUTING.md for instructions on how to run tests
 to debug a test, use the `debug` parameter for `configure_test` and `assert_test_results`
+
+This output is tailored to look right in the gitlab CI log viewer.
+This means that "---" is used instead of empty lines because gitlab removes empty lines
+and test_show_output is run with sys.stdout.isatty = False because it is False in gitlab
 """
 
 
@@ -214,6 +218,8 @@ class TestCleanupQuotas(unittest.TestCase):
     def test_show_output(self):
         assert os.getenv("TERM") != "dumb"
         assert "NO_COLOR" not in os.environ
+        assert "FORCE_COLOR" not in os.environ
+        assert "FORCE_ANSI" not in os.environ
         print()
         print("---")
         print("full style:")
