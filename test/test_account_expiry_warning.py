@@ -54,10 +54,24 @@ class TestCleanupQuotas(unittest.TestCase):
             with contextlib.redirect_stderr(self.stderr_buffer):
                 _main()
 
-    def assert_test_results(self, expected_stdout_regex: str, expected_stderr_regex: str):
+    def assert_test_results(
+        self, idlelock_warning, group_owners_warned: list[str], stderr_regex=r""
+    ):
         assert self.stdout_buffer is not None and self.stderr_buffer is not None
-        assert re.fullmatch(expected_stdout_regex, self.stdout_buffer.getvalue().strip())
-        assert re.fullmatch(expected_stderr_regex, self.stderr_buffer.getvalue().strip())
+        stdout = self.stdout_buffer.getvalue().strip()
+        stdout_lines = stdout.splitlines()
+        stderr = self.stderr_buffer.getvalue().strip()
+        assert re.fullmatch(stderr_regex, stderr)
+        # check for headers
+        idlelock_warning_headers = [x for x in stdout_lines if "Account Expiration Warning" in x]
+        group_warning_headers = [x for x in stdout_lines if "Group Owner Expiration Warning" in x]
+        self.assertEqual(1 if idlelock_warning else 0, len(idlelock_warning_headers))
+        # mulitple group warnings share the same header
+        self.assertEqual(1 if len(group_owners_warned) > 0 else 0, len(group_warning_headers))
+        # check for group names
+        for owner in group_owners_warned:
+            assert owner in stdout
+        # cleanup
         self.stdout_buffer = None
         self.stderr_buffer = None
         for p in self.patches:
@@ -76,4 +90,13 @@ class TestCleanupQuotas(unittest.TestCase):
             group_thresh=1,
         )
         self.run_test()
-        self.assert_test_results(r"", r"")
+        self.assert_test_results(idlelock_warning=False, group_owners_warned=[])
+
+    def test_idlelock_warning(self):
+        self.configure_test(
+            {"foo": {"idlelock_date": days_from_today(2)}},
+            "foo",
+            idlelock_thresh=2,
+        )
+        self.run_test()
+        self.assert_test_results(idlelock_warning=True, group_owners_warned=[])
