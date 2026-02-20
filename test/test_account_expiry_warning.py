@@ -171,8 +171,6 @@ class TestCleanupQuotas(unittest.TestCase):
             current_user="foo",
             idlelock_thresh=1,
         )
-        print()
-        print()
         _main()
         self.configure_test(
             {
@@ -207,15 +205,17 @@ class TestCleanupQuotas(unittest.TestCase):
             else:
                 os.environ[env_var_name] = previous_env_var
 
-    def test_show_output_full_style(self):
+    def test_show_output(self):
         assert os.getenv("TERM") != "dumb"
         assert "NO_COLOR" not in os.environ
+        print()
+        print()
+        print("full style:")
+        print()
         self.show_output()
-
-    def test_show_output_no_color(self):
-        assert os.getenv("TERM") != "dumb"
-        assert "NO_COLOR" not in os.environ
+        print("style with no color:")
+        print()
         self.show_output_with_env("NO_COLOR", "1")
-
-    def test_show_output_no_style(self):
+        print("no style:")
+        print()
         self.show_output_with_env("TERM", "dumb")
