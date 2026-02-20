@@ -172,6 +172,8 @@ class TestCleanupQuotas(unittest.TestCase):
             idlelock_thresh=1,
         )
         _main()
+        for p in self.patches:
+            p.stop()
         self.configure_test(
             {
                 "foo": {"idlelock_date": days_from_today(100)},
@@ -182,6 +184,8 @@ class TestCleanupQuotas(unittest.TestCase):
             group_thresh=1,
         )
         _main()
+        for p in self.patches:
+            p.stop()
         self.configure_test(
             {
                 "foo": {"idlelock_date": days_from_today(100)},
@@ -193,6 +197,8 @@ class TestCleanupQuotas(unittest.TestCase):
             group_thresh=1,
         )
         _main()
+        for p in self.patches:
+            p.stop()
 
     def show_output_with_env(self, env_var_name, env_var_value):
         previous_env_var = os.environ.get(env_var_name)
