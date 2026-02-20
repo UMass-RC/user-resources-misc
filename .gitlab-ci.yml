@@ -11,4 +11,4 @@ pre-commit:
 pytest:
   image: python:latest
   script:
-    - PYTHONPATH="$PWD" pytest test
+    - (cd test && PYTHONPATH="$(dirname "$PWD")" python -m unittest test*)
