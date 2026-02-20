@@ -31,11 +31,15 @@ DEBUG = False
 def fmt_count(word: str, count: int | float, singular_suffix="", plural_suffix="s"):
     # https://docs.djangoproject.com/en/2.2/ref/templates/builtins/#pluralize
     # examples of different suffixes: hour/hours, walrus/walruses, cherry/cherries
-    return f"{count} {word}{singular_suffix if count == 1 else plural_suffix}"
+    if float(int(count)) == float(count):
+        return f"{int(count)} {word}{singular_suffix if count == 1 else plural_suffix}"
+    else:
+        return f"{count:.1f} {word}{singular_suffix if count == 1 else plural_suffix}"
 
 
 def timedelta2str(x: timedelta):
     hours, minutes, seconds = x.seconds // 3600, x.seconds % 3600 // 60, x.seconds % 60
+    seconds += x.microseconds / 1000 / 1000
     if x.days >= 1:
         return fmt_count("day", x.days)
     elif hours >= 1:
@@ -45,7 +49,7 @@ def timedelta2str(x: timedelta):
     elif seconds >= 1:
         return fmt_count("second", seconds)
     else:
-        return f"{(x.microseconds * 1000 * 1000):.2f} seconds"
+        return f"{(x.microseconds / 1000 / 1000):.1f} seconds"
 
 
 # these are not constants so that the test cases can change the styling on the fly

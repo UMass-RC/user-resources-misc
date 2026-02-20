@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from unittest.mock import _patch, patch
 
 from unity_user_resources_misc import temp_env
-from unity_user_resources_misc.unity_account_expiry_warning import _main
+from unity_user_resources_misc.unity_account_expiry_warning import _main, timedelta2str
 
 """
 see CONTRIBUTING.md for instructions on how to run tests
@@ -233,3 +233,24 @@ class TestCleanupQuotas(unittest.TestCase):
         print("no style:")
         print("---")
         self._show_output({"TERM": "dumb"})
+
+
+class TestTimeDelta2Str(unittest.TestCase):
+    def test_timedelta2str(self):
+        cases = {
+            timedelta(): "0.0 seconds",
+            timedelta(microseconds=0.5 * 1000 * 1000): "0.5 seconds",
+            timedelta(microseconds=999999): "1.0 seconds",
+            timedelta(seconds=1): "1 second",
+            timedelta(minutes=1): "1 minute",
+            timedelta(seconds=59): "59 seconds",
+            timedelta(minutes=1, seconds=59): "1 minute",
+            timedelta(minutes=59, seconds=59): "59 minutes",
+            timedelta(hours=1): "1 hour",
+            timedelta(hours=1, minutes=59, seconds=59): "1 hour",
+            timedelta(hours=23, minutes=59, seconds=59): "23 hours",
+            timedelta(days=1): "1 day",
+            timedelta(days=999): "999 days",
+        }
+        for _input, expected_output in cases.items():
+            self.assertEqual(expected_output, timedelta2str(_input))
