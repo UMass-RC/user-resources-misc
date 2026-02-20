@@ -10,7 +10,7 @@ from unittest.mock import _patch, patch
 from unity_user_resources_misc.unity_account_expiry_warning import _main
 
 """
-see README.md for instructions on how to run tests
+see CONTRIBUTING.md for instructions on how to run tests
 to debug a test, use the `debug` parameter for `configure_test`
 """
 
@@ -32,6 +32,7 @@ class TestCleanupQuotas(unittest.TestCase):
         idlelock_thresh=-1,
         idlelock_red_thresh=-1,
         group_thresh=-1,
+        debug=False,
     ):
         current_user_groups = [] if current_user_groups is None else current_user_groups
         prefix = "unity_user_resources_misc.unity_account_expiry_warning"
@@ -43,7 +44,8 @@ class TestCleanupQuotas(unittest.TestCase):
             patch(f"{prefix}.os.getuid", lambda: 1),
             patch(f"{prefix}.pwd.getpwuid", lambda uidnumber: [current_user]),
             patch(f"{prefix}.os.getgroups", lambda: range(len(current_user_groups))),
-            patch(f"{prefix}.grp.getgrgid", lambda gid: current_user_groups[gid]),
+            patch(f"{prefix}.grp.getgrgid", lambda gid: [current_user_groups[gid]]),
+            patch(f"{prefix}.DEBUG", debug),
         ]
         for p in self.patches:
             p.start()
@@ -130,3 +132,17 @@ class TestCleanupQuotas(unittest.TestCase):
         )
         self.run_test()
         self.assert_test_results(idlelock_warning=True, group_owners_warned=[])
+
+    def test_group_warning(self):
+        self.configure_test(
+            {
+                "foo": {"idlelock_date": days_from_today(100)},
+                "bar": {"disable_date": days_from_today(1)},
+            },
+            current_user="foo",
+            current_user_groups=["pi_bar"],
+            group_thresh=1,
+            debug=True,
+        )
+        self.run_test()
+        self.assert_test_results(idlelock_warning=False, group_owners_warned=["bar"])

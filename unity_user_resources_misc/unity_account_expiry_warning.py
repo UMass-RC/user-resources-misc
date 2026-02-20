@@ -26,6 +26,7 @@ Once the user is idle-locked, they cannot login so there's no point in printing 
 IDLELOCK_WARNING_THRESHOLD_DAYS = 5 * 7
 IDLELOCK_WARNING_RED_THRESHOLD_DAYS = 7
 PI_GROUP_OWNER_DISABLE_WARNING_RED_THRESHOLD_DAYS = 9 * 7
+DEBUG = False
 
 
 def fmt_count(word: str, count: int | float, singular_suffix="", plural_suffix="s"):
@@ -123,11 +124,15 @@ def _main():
             continue
         owner_data = get_expiry_data(owner_username)
         remaining = time_until(owner_data["disable_date"])
+        if DEBUG:
+            print(f"time until PI group '{group_name} is disabled: {remaining}")
         if remaining.days <= PI_GROUP_OWNER_DISABLE_WARNING_RED_THRESHOLD_DAYS:
             pi_group_warnings.append((group_name, owner_username, remaining))
     print_pi_group_owner_disable_warning(pi_group_warnings)
     data = get_expiry_data(username)
     time_until_idlelock = time_until(data["idlelock_date"])
+    if DEBUG:
+        print(f"{time_until_idlelock=}")
     if time_until_idlelock.days <= IDLELOCK_WARNING_RED_THRESHOLD_DAYS:
         print_idlelock_warning(time_until_idlelock, red=True)
     elif time_until_idlelock.days <= IDLELOCK_WARNING_THRESHOLD_DAYS:
