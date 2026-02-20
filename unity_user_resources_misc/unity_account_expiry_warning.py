@@ -104,7 +104,10 @@ def get_expiry_data(username: str, timeout_seconds=1) -> dict:
 
 
 def time_until(_date: str) -> timedelta:
-    return date.strptime(_date, r"%Y/%m/%d") - date.today()
+    # date.strptime added in python 3.14
+    # return date.strptime(_date, r"%Y/%m/%d") - date.today()
+    year, month, day = [int(x) for x in _date.split("/")]
+    return date(year=year, month=month, day=day) - date.today()
 
 
 def main():
