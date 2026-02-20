@@ -222,11 +222,11 @@ class TestCleanupQuotas(unittest.TestCase):
         assert "FORCE_ANSI" not in os.environ
         print()
         print("---")
-        print("full style:")
+        print("style with color:")
         print("---")
         self._show_output({"FORCE_COLOR": "1", "FORCE_ANSI": "1"})
         print("---")
-        print("style with no color:")
+        print("style without color:")
         print("---")
         self._show_output({"FORCE_ANSI": "1", "NO_COLOR": "1"})
         print("---")
