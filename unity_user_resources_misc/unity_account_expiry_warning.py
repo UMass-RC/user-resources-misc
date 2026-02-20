@@ -1,3 +1,4 @@
+import argparse
 import grp
 import json
 import logging
@@ -110,7 +111,7 @@ def time_until(_date: str) -> timedelta:
     return date(year=year, month=month, day=day) - date.today()
 
 
-def main():
+def _main():
     username = pwd.getpwuid(os.getuid())[0]
     pi_group_warnings = []
     for gidnumber in os.getgroups():
@@ -131,10 +132,15 @@ def main():
         print_idlelock_warning(time_until_idlelock)
 
 
-def main_fail_quietly():
-    # entrypoint for production
-    try:
-        main()
-    except Exception as e:
-        logging.error("something went wrong", exc_info=e)
-        sys.exit(1)
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-v", "--verbose", action="store_true")
+    args = parser.parse_args()
+    if args.verbose:
+        _main()
+    else:
+        try:
+            _main()
+        except Exception as e:
+            logging.error("something went wrong", exc_info=e)
+            sys.exit(1)
