@@ -80,7 +80,7 @@ def print_pi_group_owner_disable_warning(group_data: list[tuple]):
         table = [["Group Name", "Owner Username", "Time until Disable"]] + group_data
         print("\n".join(fmt_table(table)))
         print(f"To prevent this, each group owner must simply log in to the {PORTAL}.")
-    print(f"For more information, see our {POLICY}")
+    print(f"For more information, see our {POLICY}.")
     print()
 
 
