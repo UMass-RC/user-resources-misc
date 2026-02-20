@@ -219,7 +219,7 @@ class TestCleanupQuotas(unittest.TestCase):
         print()
         print("full style:")
         print()
-        self._show_output()
+        self._show_output_with_env("FORCE_COLOR", "1")
         print("style with no color:")
         print()
         self._show_output_with_env("NO_COLOR", "1")

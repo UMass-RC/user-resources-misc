@@ -57,12 +57,16 @@ def fmt_link(url: str, text: str):
 
 
 def do_color() -> bool:
+    if os.getenv("FORCE_COLOR", "") != "":
+        return True
     if os.getenv("NO_COLOR", "") != "":
         return False
     return do_ansi()
 
 
 def do_ansi() -> bool:
+    if os.getenv("FORCE_COLOR", "") != "":
+        return True
     if not sys.stdout.isatty():
         return False
     if os.getenv("TERM", "") == "dumb":
