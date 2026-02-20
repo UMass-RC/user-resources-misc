@@ -48,7 +48,7 @@ def timedelta2str(x: timedelta):
         return f"{(x.microseconds * 1000 * 1000):.2f} seconds"
 
 
-# these are not constants so that the test cases can change the styling with environment variables
+# these are not constants so that the test cases can change the styling on the fly
 PORTAL = lambda: fmt_link("https://account.unityhpc.org", "Unity account portal")
 POLICY = lambda: fmt_link(
     "https://unityhpc.org/about/account-expiration", "account expiration policy"
