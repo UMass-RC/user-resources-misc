@@ -52,7 +52,7 @@ class TestCleanupQuotas(unittest.TestCase):
         immortal_users: list[str] | None = None,
         idlelock_thresh=-1,
         group_thresh=-1,
-        debug=False,
+        debug=True,
     ):
         current_user_groups = current_user_groups or []
         immortal_users = immortal_users or []
@@ -164,7 +164,6 @@ class TestCleanupQuotas(unittest.TestCase):
             current_user="foo",
             current_user_groups=["pi_bar"],
             group_thresh=1,
-            debug=True,
         )
         self.run_test()
         self.assert_test_results(idlelock_warning=False, group_warnings=["bar"])
@@ -179,7 +178,6 @@ class TestCleanupQuotas(unittest.TestCase):
             current_user="foo",
             current_user_groups=["pi_bar", "pi_baz"],
             group_thresh=1,
-            debug=True,
         )
         self.run_test()
         self.assert_test_results(idlelock_warning=False, group_warnings=["bar", "baz"])
@@ -195,7 +193,6 @@ class TestCleanupQuotas(unittest.TestCase):
             current_user_groups=["pi_bar", "pi_baz"],
             group_thresh=1,
             immortal_users=["baz"],
-            debug=True,
         )
         self.run_test()
         self.assert_test_results(idlelock_warning=False, group_warnings=["bar"])
@@ -203,7 +200,10 @@ class TestCleanupQuotas(unittest.TestCase):
     def _show_output(self, env: dict | None = None):
         # account warning
         self.configure_test(
-            {"foo": {"idlelock_date": days_from_today(1)}}, current_user="foo", idlelock_thresh=1
+            {"foo": {"idlelock_date": days_from_today(1)}},
+            current_user="foo",
+            idlelock_thresh=1,
+            debug=False,
         )
         self.run_test(env)
         assert self.stdout_buffer is not None
