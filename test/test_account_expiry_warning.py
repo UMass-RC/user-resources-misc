@@ -184,6 +184,22 @@ class TestCleanupQuotas(unittest.TestCase):
         self.run_test()
         self.assert_test_results(idlelock_warning=False, group_warnings=["bar", "baz"])
 
+    def test_ignore_immortal(self):
+        self.configure_test(
+            {
+                "foo": {"idlelock_date": days_from_today(100)},
+                "bar": {"disable_date": days_from_today(1)},
+                "baz": {"disable_date": days_from_today(1)},
+            },
+            current_user="foo",
+            current_user_groups=["pi_bar", "pi_baz"],
+            group_thresh=1,
+            immortal_users=["baz"],
+            debug=True,
+        )
+        self.run_test()
+        self.assert_test_results(idlelock_warning=False, group_warnings=["bar"])
+
     def _show_output(self, env: dict | None = None):
         # account warning
         self.configure_test(
