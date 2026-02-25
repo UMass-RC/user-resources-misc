@@ -143,9 +143,11 @@ def main():
     args = parser.parse_args()
     try:
         _main()
-    except Exception:
+    except Exception as e:
         if args.verbose:
             raise
+        if isinstance(e, TimeoutError):
+            syslog.syslog(syslog.LOG_ERR, "timeout")
         else:
             syslog.syslog(syslog.LOG_ERR, traceback.format_exc())
-            sys.exit(1)
+        sys.exit(1)
