@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # in theory 99% of the time spent in IO wait so it doesn't matter that python is a slow language?
 # edit: it does matter. this is twice as slow as `du`.
 import itertools
@@ -129,7 +128,3 @@ class UnityDiskUsagePerUser:
 def main():
     x = UnityDiskUsagePerUser()
     x.main()
-
-
-if __name__ == "__main__":
-    main()

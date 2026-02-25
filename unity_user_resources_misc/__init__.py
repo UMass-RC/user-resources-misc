@@ -1,4 +1,8 @@
+import os
 import re
+import sys
+from collections.abc import Sequence
+from contextlib import contextmanager
 
 
 def printable_length(x: str) -> int:
@@ -8,7 +12,7 @@ def printable_length(x: str) -> int:
     return len(ansi_be_gone.sub("", x))
 
 
-def fmt_table(table: list[list]) -> list[str]:
+def fmt_table(table: Sequence[Sequence]) -> list[str]:
     """
     I would use tabulate but I don't want nonstandard imports
     no table headers
@@ -31,8 +35,46 @@ def fmt_table(table: list[list]) -> list[str]:
     return output_lines
 
 
-def red(x) -> str:
-    return f"\033[0;31m{x}\033[0m"
+def fmt_red(x) -> str:
+    if do_color():
+        return f"\033[0;31m{x}\033[0m"
+    else:
+        return x
+
+
+def fmt_bold(x: str):
+    if do_ansi():
+        return f"\033[1m{x}\033[0m"
+    else:
+        return x
+
+
+def fmt_link(url: str, text: str):
+    # https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda
+    if do_ansi():
+        return f"\033]8;;{url}\033\\{text}\033]8;;\033\\"
+    else:
+        return f"{text}: {url}"
+
+
+def do_color() -> bool:
+    if os.getenv("FORCE_COLOR", "") != "":
+        return True
+    if os.getenv("NO_COLOR", "") != "":
+        return False
+    return do_ansi()
+
+
+def do_ansi() -> bool:
+    if os.getenv("FORCE_ANSI", "") != "":
+        return True
+    if os.getenv("FORCE_COLOR", "") != "":
+        return True
+    if not sys.stdout.isatty():
+        return False
+    if os.getenv("TERM", "") == "dumb":
+        return False
+    return True
 
 
 def human_readable_size(size_in_bytes: int) -> str:
@@ -65,3 +107,19 @@ def human_readable_count(count: int) -> str:
         return str(current_count)  # no decimals
     else:
         return f"{current_count:.2f} {current_unit}"
+
+
+@contextmanager
+def temp_env(env: dict):
+    previous_env_vars = os.environ.copy()
+    for k, v in env.items():
+        os.environ[k] = v
+    try:
+        yield
+    finally:
+        for k in env.keys():
+            v = previous_env_vars.get(k)
+            if v is None:
+                del os.environ[k]
+            else:
+                os.environ[k] = v
