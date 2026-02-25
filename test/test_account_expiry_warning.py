@@ -219,6 +219,7 @@ class TestCleanupQuotas(unittest.TestCase):
             current_user="foo",
             current_user_groups=["pi_bar"],
             group_thresh=1,
+            debug=False,
         )
         self.run_test(env)
         assert self.stdout_buffer is not None
@@ -235,6 +236,7 @@ class TestCleanupQuotas(unittest.TestCase):
             current_user="foo",
             current_user_groups=["pi_bar", "pi_baz"],
             group_thresh=1,
+            debug=False,
         )
         self.run_test(env)
         assert self.stdout_buffer is not None
