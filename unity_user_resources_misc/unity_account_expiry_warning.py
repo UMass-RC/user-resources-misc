@@ -1,11 +1,12 @@
 import argparse
 import grp
 import json
-import logging
 import os
 import pwd
 import ssl
 import sys
+import syslog
+import traceback
 from datetime import date, timedelta
 from http.client import HTTPResponse
 from urllib import request
@@ -142,9 +143,9 @@ def main():
     args = parser.parse_args()
     try:
         _main()
-    except Exception as e:
+    except Exception:
         if args.verbose:
             raise
         else:
-            logging.error("something went wrong", exc_info=e)
+            syslog.syslog(syslog.LOG_ERR, traceback.format_exc())
             sys.exit(1)
