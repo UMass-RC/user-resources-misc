@@ -135,7 +135,7 @@ def _main():
     time_until_idlelock = time_until(data["idlelock_date"])
     if DEBUG:
         print(f"{time_until_idlelock=}")
-    elif time_until_idlelock.days <= IDLELOCK_WARNING_THRESHOLD_DAYS:
+    if time_until_idlelock.days <= IDLELOCK_WARNING_THRESHOLD_DAYS:
         print_idlelock_warning(time_until_idlelock)
 
 
