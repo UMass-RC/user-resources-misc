@@ -18,6 +18,7 @@ from unity_user_resources_misc import fmt_bold, fmt_link, fmt_red, fmt_table
 * queries the account portal's expiry API to determine when the current user is scheduled to expire
 * if it's soon, print a warning message
 * also make the same check for the owners of any PI groups the current user is a member of
+    * unless those group owners are immortal, then there's no need to check
 
 During the expiration process, the user is idle-locked and then later disabled.
 A warning is only printed out for the idle-lock, not for the disabling.
@@ -114,13 +115,14 @@ def time_until(_date: str) -> timedelta:
 
 def _main():
     username = pwd.getpwuid(os.getuid())[0]
+    ignore_group_owners = [username] + grp.getgrnam("immortal").gr_mem
     pi_group_warnings = []
     for gidnumber in os.getgroups():
         group_name = grp.getgrgid(gidnumber)[0]
         if not group_name.startswith("pi_"):
             continue
         owner_username = group_name[3:]
-        if owner_username == username:
+        if owner_username in ignore_group_owners:
             continue
         owner_data = get_expiry_data(owner_username)
         remaining = time_until(owner_data["disable_date"])

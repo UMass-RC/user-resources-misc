@@ -34,6 +34,11 @@ class MockHTTPResponse:
         return self._bytes
 
 
+class MockGroup:
+    def __init__(self, members):
+        self.gr_mem = members
+
+
 class TestCleanupQuotas(unittest.TestCase):
     patches: list[_patch]
     stdout_buffer: io.StringIO | None
@@ -44,11 +49,15 @@ class TestCleanupQuotas(unittest.TestCase):
         data: dict[str, dict[str, str]],
         current_user: str,
         current_user_groups: list[str] | None = None,
+        immortal_users: list[str] | None = None,
         idlelock_thresh=-1,
         group_thresh=-1,
         debug=False,
     ):
-        current_user_groups = [] if current_user_groups is None else current_user_groups
+        current_user_groups = current_user_groups or []
+        immortal_users = immortal_users or []
+        all_group_names = current_user_groups + ["immortal"]
+        group_members = {"immortal": MockGroup(immortal_users)}
 
         def urlopen(url: str, **kwargs):
             _, query_param = url.split("?")
@@ -63,8 +72,9 @@ class TestCleanupQuotas(unittest.TestCase):
             patch(f"{prefix}.request.urlopen", urlopen),
             patch(f"{prefix}.os.getuid", lambda: 1),
             patch(f"{prefix}.pwd.getpwuid", lambda uidnumber: [current_user]),
-            patch(f"{prefix}.os.getgroups", lambda: range(len(current_user_groups))),
-            patch(f"{prefix}.grp.getgrgid", lambda gid: [current_user_groups[gid]]),
+            patch(f"{prefix}.os.getgroups", lambda: range(len(all_group_names))),
+            patch(f"{prefix}.grp.getgrgid", lambda gid: [all_group_names[gid]]),
+            patch(f"{prefix}.grp.getgrnam", lambda gid: group_members[gid]),
             patch(f"{prefix}.DEBUG", debug),
         ]
         for p in self.patches:
@@ -173,6 +183,22 @@ class TestCleanupQuotas(unittest.TestCase):
         )
         self.run_test()
         self.assert_test_results(idlelock_warning=False, group_warnings=["bar", "baz"])
+
+    def test_ignore_immortal(self):
+        self.configure_test(
+            {
+                "foo": {"idlelock_date": days_from_today(100)},
+                "bar": {"disable_date": days_from_today(1)},
+                "baz": {"disable_date": days_from_today(1)},
+            },
+            current_user="foo",
+            current_user_groups=["pi_bar", "pi_baz"],
+            group_thresh=1,
+            immortal_users=["baz"],
+            debug=True,
+        )
+        self.run_test()
+        self.assert_test_results(idlelock_warning=False, group_warnings=["bar"])
 
     def _show_output(self, env: dict | None = None):
         # account warning
