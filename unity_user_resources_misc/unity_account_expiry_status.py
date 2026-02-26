@@ -1,7 +1,7 @@
 import os
 import pwd
 
-from unity_user_resources_misc.unity_account_expiry_status import (
+from unity_user_resources_misc.unity_account_expiry_warning import (
     IDLELOCK_WARNING_THRESHOLD_DAYS,
     get_expiry_data,
     time_until,
