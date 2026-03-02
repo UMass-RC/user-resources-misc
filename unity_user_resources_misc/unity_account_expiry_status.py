@@ -13,7 +13,7 @@ def main():
     username = pwd.getpwuid(os.getuid())[0]
     data = get_expiry_data(username)
     time_until_idlelock = time_until(data["idlelock_date"])
-    if time_until_idlelock.days < IDLELOCK_WARNING_THRESHOLD_DAYS:
+    if time_until_idlelock.days <= IDLELOCK_WARNING_THRESHOLD_DAYS:
         print_idlelock_warning(time_until_idlelock)
     else:
         print("Your account is not considered idle, and is not scheduled to be locked.")
