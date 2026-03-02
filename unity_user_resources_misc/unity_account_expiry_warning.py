@@ -115,16 +115,16 @@ def time_until(_date: str) -> timedelta:
 
 def _main():
     username = pwd.getpwuid(os.getuid())[0]
-    if username == "root":
+    ignore_users = ["root"] + grp.getgrnam("immortal").gr_mem
+    if username in ignore_users:
         return
-    ignore_group_owners = [username] + grp.getgrnam("immortal").gr_mem
     pi_group_warnings = []
     for gidnumber in os.getgroups():
         group_name = grp.getgrgid(gidnumber)[0]
         if not group_name.startswith("pi_"):
             continue
         owner_username = group_name[3:]
-        if owner_username in ignore_group_owners:
+        if owner_username in ignore_users or owner_username == username:
             continue
         owner_data = get_expiry_data(owner_username)
         remaining = time_until(owner_data["disable_date"])
