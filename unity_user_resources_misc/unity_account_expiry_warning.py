@@ -115,6 +115,8 @@ def time_until(_date: str) -> timedelta:
 
 def _main():
     username = pwd.getpwuid(os.getuid())[0]
+    if username == "root":
+        return
     ignore_group_owners = [username] + grp.getgrnam("immortal").gr_mem
     pi_group_warnings = []
     for gidnumber in os.getgroups():
