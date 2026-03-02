@@ -182,7 +182,7 @@ class TestCleanupQuotas(unittest.TestCase):
         self.run_test()
         self.assert_test_results(idlelock_warning=False, group_warnings=["bar", "baz"])
 
-    def test_ignore_immortal(self):
+    def test_ignore_immortal_group_owner(self):
         self.configure_test(
             {
                 "foo": {"idlelock_date": days_from_today(100)},
@@ -196,6 +196,25 @@ class TestCleanupQuotas(unittest.TestCase):
         )
         self.run_test()
         self.assert_test_results(idlelock_warning=False, group_warnings=["bar"])
+
+    def test_ignore_root_current_user(self):
+        self.configure_test({}, current_user="root")
+        self.run_test()
+        self.assert_test_results(idlelock_warning=False, group_warnings=[])
+
+    def test_ignore_immortal_current_user(self):
+        self.configure_test(
+            {
+                "foo": {"idlelock_date": days_from_today(1)},
+                "bar": {"disable_date": days_from_today(1)},
+            },
+            current_user="foo",
+            current_user_groups=["pi_bar"],
+            group_thresh=1,
+            immortal_users=["foo"],
+        )
+        self.run_test()
+        self.assert_test_results(idlelock_warning=False, group_warnings=[])
 
     def _show_output(self, env: dict | None = None):
         # account warning
