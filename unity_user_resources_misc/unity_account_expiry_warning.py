@@ -39,21 +39,6 @@ def fmt_count(word: str, count: int | float, singular_suffix="", plural_suffix="
         return f"{count:.1f} {word}{singular_suffix if count == 1 else plural_suffix}"
 
 
-def timedelta2str(x: timedelta):
-    hours, minutes, seconds = x.seconds // 3600, x.seconds % 3600 // 60, x.seconds % 60
-    seconds += x.microseconds / 1000 / 1000
-    if x.days >= 1:
-        return fmt_count("day", x.days)
-    elif hours >= 1:
-        return fmt_count("hour", hours)
-    elif minutes >= 1:
-        return fmt_count("minute", minutes)
-    elif seconds >= 1:
-        return fmt_count("second", seconds)
-    else:
-        return f"{(x.microseconds / 1000 / 1000):.1f} seconds"
-
-
 # these are not constants so that the test cases can change the styling on the fly
 PORTAL = lambda: fmt_link("https://account.unityhpc.org", "Unity account portal")
 POLICY = lambda: fmt_link(
@@ -66,7 +51,7 @@ def print_idlelock_warning(time_until_idlelock: timedelta):
         "\n".join(
             [
                 fmt_red(fmt_bold("Account Expiration Warning")),
-                f"Your account is scheduled to be idle-locked in {timedelta2str(time_until_idlelock)}.",
+                f"Your account is scheduled to be idle-locked in {time_until_idlelock.days} days.",
                 f"To prevent this, simply log in to the {PORTAL()}.",
                 f"For more information, see our {POLICY()}.",
                 "",
@@ -78,15 +63,15 @@ def print_idlelock_warning(time_until_idlelock: timedelta):
 def print_pi_group_owner_disable_warning(group_data: list[tuple]):
     if len(group_data) == 0:
         return
-    group_data = [(x, y, timedelta2str(z)) for x, y, z in group_data]
+    group_data = [(x, y, z.days) for x, y, z in group_data]
     print(fmt_red(fmt_bold("PI Group Owner Expiration Warning")))
     if len(group_data) == 1:
-        group_name, owner, remaining = group_data[0]
-        print(f"The owner of PI group '{group_name}' is scheduled to be disabled in {remaining}.")
+        group_name, owner, days = group_data[0]
+        print(f"The owner of PI group '{group_name}' is scheduled to be disabled in {days} days.")
         print(f"To prevent this, the group owner '{owner}' must simply log in to the {PORTAL()}.")
     else:
         print("The owners of the following PI groups are scheduled to be disabled:")
-        table = [["Group Name", "Owner Username", "Time until Disable"]] + group_data
+        table = [["Group Name", "Owner Username", "Days Until Disabled"]] + group_data
         print("\n".join(fmt_table(table)))
         print(f"To prevent this, each group owner must simply log in to the {PORTAL()}.")
     print(f"For more information, see our {POLICY()}.")
