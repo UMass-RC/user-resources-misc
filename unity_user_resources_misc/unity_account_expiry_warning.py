@@ -63,7 +63,7 @@ def print_idlelock_warning(time_until_idlelock: timedelta):
 def print_pi_group_owner_disable_warning(group_data: list[tuple]):
     if len(group_data) == 0:
         return
-    group_data = [(x, y, z.days) for x, y, z in group_data]
+    group_data = [(x, y, str(z.days)) for x, y, z in group_data]
     print(fmt_red(fmt_bold("PI Group Owner Expiration Warning")))
     if len(group_data) == 1:
         group_name, owner, days = group_data[0]
