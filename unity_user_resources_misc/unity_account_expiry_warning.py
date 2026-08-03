@@ -52,7 +52,7 @@ def print_idlelock_warning(time_until_idlelock: timedelta):
             [
                 fmt_red(fmt_bold("Account Expiration Warning")),
                 f"Your account is scheduled to be locked in {time_until_idlelock.days} days due to a lapse in credential verification.",
-                f"To verify your credentials, simply log in to the {PORTAL()}.",
+                f"To verify your credentials, simply log in to the {PORTAL()}. SSH login doesn't verify your credentials.",
                 f"For more information, see our {POLICY()}.",
                 "",
             ]
