@@ -51,8 +51,8 @@ def print_idlelock_warning(time_until_idlelock: timedelta):
         "\n".join(
             [
                 fmt_red(fmt_bold("Account Expiration Warning")),
-                f"Your account is scheduled to be idle-locked in {time_until_idlelock.days} days.",
-                f"To prevent this, simply log in to the {PORTAL()}.",
+                f"Your account is scheduled to be locked in {time_until_idlelock.days} days due to a lapse in credential verification.",
+                f"To verify your credentials, simply log in to the {PORTAL()}.",
                 f"For more information, see our {POLICY()}.",
                 "",
             ]
@@ -68,12 +68,16 @@ def print_pi_group_owner_disable_warning(group_data: list[tuple]):
     if len(group_data) == 1:
         group_name, owner, days = group_data[0]
         print(f"The owner of PI group '{group_name}' is scheduled to be disabled in {days} days.")
-        print(f"To prevent this, the group owner '{owner}' must simply log in to the {PORTAL()}.")
+        print(
+            f"To prevent this, the group owner '{owner}' must verify credentials by logging in to the {PORTAL()}."
+        )
     else:
         print("The owners of the following PI groups are scheduled to be disabled:")
         table = [["Group Name", "Owner Username", "Days Until Disabled"]] + group_data
         print("\n".join(fmt_table(table)))
-        print(f"To prevent this, each group owner must simply log in to the {PORTAL()}.")
+        print(
+            f"To prevent this, each group owner must verify credentials by logging in to the {PORTAL()}."
+        )
     print(f"For more information, see our {POLICY()}.")
     print()
 
