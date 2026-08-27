@@ -56,3 +56,7 @@ def main():
     if usage != []:
         for line in fmt_table(usage):
             print(line)
+
+
+if __name__ == "__main__":
+    main()

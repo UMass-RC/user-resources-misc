@@ -17,3 +17,7 @@ def main():
         print_idlelock_warning(time_until_idlelock)
     else:
         print("Your account is not considered idle, and is not scheduled to be locked.")
+
+
+if __name__ == "__main__":
+    main()
